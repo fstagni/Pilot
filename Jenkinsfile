@@ -49,10 +49,12 @@ pipeline {
             steps {
                 echo "Sourcing and installing"
 
-                sh "export projectVersion=${params.DIRAC_install_tag}"
-                sh "source $WORKSPACE/TestCode/Pilot/tests/CI/pilot_ci.sh"
-                sh "fullPilot"
-                sh "source $WORKSPACE/PilotInstallDIR/bashrc"
+                sh """
+                    export projectVersion=${params.DIRAC_install_tag}
+                    source $WORKSPACE/TestCode/Pilot/tests/CI/pilot_ci.sh
+                    fullPilot
+                    source $WORKSPACE/PilotInstallDIR/bashrc
+                """
 
                 echo "**** Pilot INSTALLATION DONE ****"
             }
