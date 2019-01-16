@@ -50,19 +50,9 @@ pipeline {
             steps {
                 echo "Sourcing and installing"
 
-                sh "pwd"
-                sh "ls -l"
-                sh "ls -l $WORKSPACE/TestCode/"
-                sh "ls -l $WORKSPACE/TestCode/Pilot"
-
-                sh """
-                    source $WORKSPACE/TestCode/Pilot/tests/CI/pilot_ci.sh
-
-                    fullPilot
-
-                    cd $WORKSPACE/PilotInstallDIR
-                    source $WORKSPACE/PilotInstallDIR/bashrc
-                """
+                sh "source $WORKSPACE/TestCode/Pilot/tests/CI/pilot_ci.sh"
+                sh "fullPilot"
+                sh "source $WORKSPACE/PilotInstallDIR/bashrc"
 
                 echo "**** Pilot INSTALLATION DONE ****"
             }
