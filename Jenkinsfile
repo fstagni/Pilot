@@ -18,7 +18,6 @@ pipeline {
         JENKINS_SITE='DIRAC.Jenkins.ch'
         DIRACUSERDN='/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=zmathe/CN=674937/CN=Zoltan Mathe'
         DIRACUSERROLE='lhcb_user'
-        projectVersion=${params.DIRAC_install_tag}
     }
     stages {
         stage('GET') {
@@ -50,6 +49,7 @@ pipeline {
             steps {
                 echo "Sourcing and installing"
 
+                sh "export projectVersion=${params.DIRAC_install_tag}"
                 sh "source $WORKSPACE/TestCode/Pilot/tests/CI/pilot_ci.sh"
                 sh "fullPilot"
                 sh "source $WORKSPACE/PilotInstallDIR/bashrc"
