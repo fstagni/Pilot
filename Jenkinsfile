@@ -2,20 +2,23 @@
 
 pipeline {
     agent { label 'lhcbci-cernvm' }
-    environment {
-        DIRACSETUP='Dirac-Certification'
-        CSURL='dips://lbcertifdirac6.cern.ch:9135/Configuration/Server'
-        DIRACSE='CERN-SWTEST'
-        DIRACUSERDN='/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=zmathe/CN=674937/CN=Zoltan Mathe'
-        DIRACUSERROLE='lhcb_user'
-    }
     parameters {
         string(name: 'Pilot_repo', defaultValue: 'DIRACGrid', description: 'The Pilot repo')
         string(name: 'Pilot_branch', defaultValue: 'master', description: 'The Pilot branch')
         string(name: 'DIRAC_test_repo', defaultValue: 'DIRACGrid', description: 'The DIRAC repo to use for getting the test code')
         string(name: 'DIRAC_test_branch', defaultValue: 'rel-v6r20', description: 'The DIRAC branch to use for getting the test code')
         string(name: 'DIRAC_install_repo', defaultValue: 'DIRACGrid', description: 'The DIRAC repo to use for installing DIRAC')
-        string(name: 'projectVersion', defaultValue: 'v6r20p25', description: 'The DIRAC version to install (tag or branch)')
+        string(name: 'DIRAC_install_tag', defaultValue: 'v6r20p25', description: 'The DIRAC version to install (tag or branch)')
+    }
+    environment {
+        DIRACSETUP='Dirac-Certification'
+        CSURL='dips://lbcertifdirac6.cern.ch:9135/Configuration/Server'
+        DIRACSE='CERN-SWTEST'
+        JENKINS_QUEUE='jenkins-queue_not_important'
+        JENKINS_SITE='DIRAC.Jenkins.ch'
+        DIRACUSERDN='/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=zmathe/CN=674937/CN=Zoltan Mathe'
+        DIRACUSERROLE='lhcb_user'
+        projectVersion=${params.DIRAC_install_tag}
     }
     stages {
         stage('GET') {
@@ -47,24 +50,9 @@ pipeline {
             steps {
                 echo "Sourcing and installing"
 
-                sh "pwd"
-                sh "ls -l"
-                sh "ls -l $WORKSPACE/TestCode/"
-                sh "ls -l $WORKSPACE/TestCode/Pilot"
-
-                sh """
-                    set -e
-                    source $WORKSPACE/TestCode/Pilot/tests/CI/pilot_ci.sh
-
-                    export DIRACSETUP=LHCb-Certification
-                    export JENKINS_QUEUE=jenkins-queue_not_important
-                    export JENKINS_SITE=DIRAC.Jenkins.ch
-
-                    fullPilot
-
-                    cd $WORKSPACE/PilotInstallDIR
-                    source $WORKSPACE/PilotInstallDIR/environmentLHCbDirac
-                """
+                sh "source $WORKSPACE/TestCode/Pilot/tests/CI/pilot_ci.sh"
+                sh "fullPilot"
+                sh "source $WORKSPACE/PilotInstallDIR/bashrc"
 
                 echo "**** Pilot INSTALLATION DONE ****"
             }
