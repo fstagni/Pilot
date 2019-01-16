@@ -14,6 +14,8 @@ pipeline {
         DIRACSETUP='Dirac-Certification'
         CSURL='dips://lbcertifdirac6.cern.ch:9135/Configuration/Server'
         DIRACSE='CERN-SWTEST'
+        JENKINS_QUEUE='jenkins-queue_not_important'
+        JENKINS_SITE='DIRAC.Jenkins.ch'
         DIRACUSERDN='/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=zmathe/CN=674937/CN=Zoltan Mathe'
         DIRACUSERROLE='lhcb_user'
         projectVersion=${params.DIRAC_install_tag}
@@ -54,17 +56,12 @@ pipeline {
                 sh "ls -l $WORKSPACE/TestCode/Pilot"
 
                 sh """
-                    set -e
                     source $WORKSPACE/TestCode/Pilot/tests/CI/pilot_ci.sh
-
-                    export DIRACSETUP=LHCb-Certification
-                    export JENKINS_QUEUE=jenkins-queue_not_important
-                    export JENKINS_SITE=DIRAC.Jenkins.ch
 
                     fullPilot
 
                     cd $WORKSPACE/PilotInstallDIR
-                    source $WORKSPACE/PilotInstallDIR/environmentLHCbDirac
+                    source $WORKSPACE/PilotInstallDIR/bashrc
                 """
 
                 echo "**** Pilot INSTALLATION DONE ****"

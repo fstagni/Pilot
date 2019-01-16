@@ -92,6 +92,8 @@ function PilotInstall(){
   sed -i "s#VAR_CS#$CSURL#g" pilot.json
   sed -i "s#VAR_USERDN#$DIRACUSERDN#g" pilot.json
 
+  more pilot.json
+
   prepareForPilot
 
   # launch the pilot script
