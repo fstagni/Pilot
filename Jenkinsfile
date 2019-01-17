@@ -18,6 +18,7 @@ pipeline {
         JENKINS_SITE='DIRAC.Jenkins.ch'
         DIRACUSERDN='/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=zmathe/CN=674937/CN=Zoltan Mathe'
         DIRACUSERROLE='lhcb_user'
+        projectVersion=params.DIRAC_install_tag
     }
     stages {
         stage('GET') {
@@ -27,20 +28,10 @@ pipeline {
 
                 echo "Here getting the code"
 
-                sh """
-                    mkdir -p $WORKSPACE/TestCode
-                    cd $WORKSPACE/TestCode
-
-                    git clone https://github.com/${params.Pilot_repo}/Pilot.git
-                    cd Pilot
-                    git checkout ${params.Pilot_branch}
-                    cd ..
-
-                    git clone https://github.com/${params.DIRAC_test_repo}/DIRAC.git
-                    cd DIRAC
-                    git checkout ${params.DIRAC_test_branch}
-                    cd $WORKSPACE
-                """
+                dir("$WORKSPACE/TestCode"){
+                    git branch: params.Pilot_branch, url: params.Pilot_repo
+                    git branch: params.DIRAC_test_branch, url: params.DIRAC_test_repo
+                }
 
                 echo "Got the test code"
             }
