@@ -31,11 +31,13 @@ pipeline {
                 dir("$WORKSPACE/TestCode"){
                     sh """
                         git clone https://github.com/${params.Pilot_repo}/Pilot.git
+                        cd Pilot
                         git checkout ${params.Pilot_branch}
                         cd ..
                     """
                     sh """
-                        git clone https://github.com/${params.DIRAC_test_repo}/Pilot.git
+                        git clone https://github.com/${params.DIRAC_test_repo}/DIRAC.git
+                        cd DIRAC
                         git checkout ${params.DIRAC_test_branch}
                         cd ..
                     """
