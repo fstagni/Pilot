@@ -29,8 +29,16 @@ pipeline {
                 echo "Here getting the code"
 
                 dir("$WORKSPACE/TestCode"){
-                    git branch: params.Pilot_branch, url: params.Pilot_repo
-                    git branch: params.DIRAC_test_branch, url: params.DIRAC_test_repo
+                    sh """
+                        git clone https://github.com/${params.Pilot_repo}/Pilot.git
+                        git checkout ${params.Pilot_branch}
+                        cd ..
+                    """
+                    sh """
+                        git clone https://github.com/${params.DIRAC_test_repo}/Pilot.git
+                        git checkout ${params.DIRAC_test_branch}
+                        cd ..
+                    """
                 }
 
                 echo "Got the test code"
