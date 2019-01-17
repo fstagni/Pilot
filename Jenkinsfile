@@ -18,7 +18,7 @@ pipeline {
         JENKINS_SITE='DIRAC.Jenkins.ch'
         DIRACUSERDN='/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=zmathe/CN=674937/CN=Zoltan Mathe'
         DIRACUSERROLE='lhcb_user'
-        projectVersion=${params.DIRAC_install_tag}
+        projectVersion="${params.DIRAC_install_tag}"
     }
     stages {
         stage('GET') {
