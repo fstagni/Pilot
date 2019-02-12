@@ -94,9 +94,11 @@ function PilotInstall(){
 
   prepareForPilot
   #preparePythonEnvironment
-  python PilotLoggerTools.py PilotUUID
-  python PilotLogger.py "Hello I am THE best pilot"
-  python PilotLogger.py "Using DIRAC Pilot 3.0 code now..."
+
+  # The following are disabled because they are trying to log using stomp and on python 2.6 it just doesn't work
+  # python PilotLoggerTools.py PilotUUID
+  # python PilotLogger.py "Hello I am THE best pilot"
+  # python PilotLogger.py "Using DIRAC Pilot 3.0 code now..."
 
   # launch the pilot script
   pilotOptions="-M 1 -S $DIRACSETUP -N $JENKINS_CE -Q $JENKINS_QUEUE -n $JENKINS_SITE --cert --certLocation=/home/dirac/certs --pilotLogging"

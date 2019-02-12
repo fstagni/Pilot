@@ -8,8 +8,8 @@ __RCSID__ = "$Id$"
 import os
 import Queue
 import logging
-import stomp
 import argparse
+import stomp
 
 from PilotLoggerTools import generateDict, encodeMessage
 from PilotLoggerTools import generateTimeStamp
@@ -149,12 +149,11 @@ class PilotLogger(object):
     if not config:
       logging.warning('Could not open or load configuration File! Pilot Logger will use some default values!!!')
       return False
-    else:
-      self.fileWithUUID = config['fileWithID']
-      self.networkCfg = [(config['host'], int(config['port']))]
-      self.queuePath = config['queuePath']
-      self.sslCfg = dict((k, config[k]) for k in ('key_file', 'cert_file', 'ca_certs'))
-      return True
+    self.fileWithUUID = config['fileWithID']
+    self.networkCfg = [(config['host'], int(config['port']))]
+    self.queuePath = config['queuePath']
+    self.sslCfg = dict((k, config[k]) for k in ('key_file', 'cert_file', 'ca_certs'))
+    return True
 
   def _isCorrectStatus(self, status):
     """ Checks if the flag corresponds to one of the predefined
@@ -219,8 +218,7 @@ class PilotLogger(object):
     encodedMsg = encodeMessage(message)
     if localOutputFile:
       return saveMessageToFile(msg=encodedMsg, filename=localOutputFile)
-    else:
-      return self._sendMessage(encodedMsg, flag=status)
+    return self._sendMessage(encodedMsg, flag=status)
 
 
 def main():
@@ -244,20 +242,22 @@ def main():
                                    '                   python PilotLogger.py \
                                    InstallDIRAC installing debug Debug message\n' +
                                    '                   python PilotLogger.py "My message"\n' +
-                                   '                   python PilotLogger.py "My message" --output myFileName\n'
-                                   )
+                                   '                   python PilotLogger.py "My message" --output myFileName\n')
+
   parser.add_argument('source',
                       type=singleWord,
                       nargs='?',
                       default='unspecified',
                       help='Source of the message e.g. "InstallDIRAC". It must be one word. ' +
-                           'If not specified it is set to "unspecified".')
+                      'If not specified it is set to "unspecified".')
+
   parser.add_argument('phase',
                       type=singleWord,
                       nargs='?',
                       default='unspecified',
                       help='Phase of the process e.g. "fetching". It must be one word. ' +
-                            'If not specified it is set to "unspecified".')
+                      'If not specified it is set to "unspecified".')
+
   parser.add_argument('status',
                       nargs='?',
                       choices=PilotLogger.STATUSES,
@@ -265,12 +265,15 @@ def main():
                       help='Allowed values are: ' + ', '.join(PilotLogger.STATUSES) +
                       '. If not specified it is set to "info".',
                       metavar='status ')
+
   parser.add_argument('message',
                       nargs='+',
                       help='Human readable content of the message. ')
+
   parser.add_argument('--output',
                       help='Log the content to the specified file' +
                       ' instead of sending it to the Message Queue server.')
+
   args = parser.parse_args()
 
   if len(" ".join(args.message)) >= 200:
