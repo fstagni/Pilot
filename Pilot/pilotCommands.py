@@ -317,8 +317,10 @@ class ConfigureBasics(CommandBase):
     """  basics (needed!)
     """
     self.cfg.append('-S "%s"' % self.pp.setup)
+    self.cfg.append('-o /LocalInstallation/Setup=%s' % self.pp.setup)
     if self.pp.configServer:
       self.cfg.append('-C "%s"' % self.pp.configServer)
+      self.cfg.append('-o /LocalInstallation/ConfigurationServer=%s' % self.pp.configServer)
     if self.pp.releaseProject:
       self.cfg.append('-e "%s"' % self.pp.releaseProject)
       self.cfg.append('-o /LocalSite/ReleaseProject=%s' % self.pp.releaseProject)
