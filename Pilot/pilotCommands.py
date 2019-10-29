@@ -828,8 +828,6 @@ class LaunchAgent(CommandBase):
     self.log.info('User Id    = %s' % localUid)
     self.inProcessOpts = ['-s /Resources/Computing/CEDefaults']
     self.inProcessOpts.append('-o WorkingDirectory=%s' % self.pp.workingDir)
-    # FIXME: this is artificial
-    self.inProcessOpts.append('-o TotalCPUs=%s' % 1)
     self.inProcessOpts.append('-o /LocalSite/MaxCPUTime=%s' % (int(self.pp.jobCPUReq)))
     self.inProcessOpts.append('-o /LocalSite/CPUTime=%s' % (int(self.pp.jobCPUReq)))
     self.inProcessOpts.append('-o MaxRunningJobs=%s' % 1)
