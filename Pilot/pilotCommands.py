@@ -387,10 +387,10 @@ class CheckCECapabilities(CommandBase):
       self.cfg.append(self.pp.localConfigFile)  # this file is as input
 
     # Get the resource description as defined in its configuration
-    checkCmd = 'dirac-resource-get-parameters -S %s -N %s -Q %s %s' % (self.pp.site,
-                                                                       self.pp.ceName,
-                                                                       self.pp.queueName,
-                                                                       " ".join(self.cfg))
+    checkCmd = 'dirac-resource-get-parameters -S %s -N %s -Q %s %s -d' % (self.pp.site,
+                                                                          self.pp.ceName,
+                                                                          self.pp.queueName,
+                                                                          " ".join(self.cfg))
     retCode, resourceDict = self.executeAndGetOutput(checkCmd, self.pp.installEnv)
     if retCode:
       self.log.error("Could not get resource parameters [ERROR %d]" % retCode)
@@ -478,10 +478,10 @@ class CheckWNCapabilities(CommandBase):
     if self.pp.localConfigFile:
       self.cfg.append(self.pp.localConfigFile)  # this file is as input
     # Get the worker node parameters
-    checkCmd = 'dirac-wms-get-wn-parameters -S %s -N %s -Q %s %s' % (self.pp.site,
-                                                                     self.pp.ceName,
-                                                                     self.pp.queueName,
-                                                                     " ".join(self.cfg))
+    checkCmd = 'dirac-wms-get-wn-parameters -S %s -N %s -Q %s %s -d' % (self.pp.site,
+                                                                        self.pp.ceName,
+                                                                        self.pp.queueName,
+                                                                        " ".join(self.cfg))
     retCode, result = self.executeAndGetOutput(checkCmd, self.pp.installEnv)
     if retCode:
       self.log.error("Could not get resource parameters [ERROR %d]" % retCode)
@@ -730,7 +730,7 @@ class ConfigureArchitecture(CommandBase):
     if self.pp.localConfigFile:
       cfg.append(self.pp.localConfigFile)  # this file is as input
 
-    architectureCmd = "%s %s" % (self.pp.architectureScript, " ".join(cfg))
+    architectureCmd = "%s %s -d" % (self.pp.architectureScript, " ".join(cfg))
 
     retCode, localArchitecture = self.executeAndGetOutput(architectureCmd, self.pp.installEnv)
     if retCode:
@@ -781,37 +781,40 @@ class ConfigureCPURequirements(CommandBase):
     if self.pp.localConfigFile:
       configFileArg = '%s -R %s %s' % (configFileArg, self.pp.localConfigFile, self.pp.localConfigFile)
     retCode, cpuNormalizationFactorOutput = self.executeAndGetOutput(
-        'dirac-wms-cpu-normalization -U %s' % configFileArg, self.pp.installEnv)
+        'dirac-wms-cpu-normalization -U %s -d' % configFileArg,
+        self.pp.installEnv)
     if retCode:
       self.log.error("Failed to determine cpu normalization [ERROR %d]" % retCode)
       self.exitWithError(retCode)
-    cpuNormalizationFactorOutput = cpuNormalizationFactorOutput.split('\n')[-1]
-
     # HS06 benchmark
-    # FIXME: this is a (necessary) hack!
-    cpuNormalizationFactor = float(cpuNormalizationFactorOutput.split('\n')[0].replace("Estimated CPU power is ",
-                                                                                       '').replace(" HS06", ''))
-    self.log.info(
-        "Current normalized CPU as determined by 'dirac-wms-cpu-normalization' is %f" %
-        cpuNormalizationFactor)
+    for line in cpuNormalizationFactorOutput.split('\n'):
+      if "Estimated CPU power is" in line:
+        line = line.replace("Estimated CPU power is", '')
+      if "HS06" in line:
+        line = line.replace("HS06", '')
+        cpuNormalizationFactor = float(line.strip())
+        self.log.info(
+            "Current normalized CPU as determined by 'dirac-wms-cpu-normalization' is %f" %
+            cpuNormalizationFactor)
 
     configFileArg = ''
     if self.pp.useServerCertificate:
       configFileArg = '-o /DIRAC/Security/UseServerCertificate=yes'
-    retCode, cpuTimeOutput = self.executeAndGetOutput('dirac-wms-get-queue-cpu-time %s %s' % (configFileArg,
-                                                                                              self.pp.localConfigFile),
-                                                      self.pp.installEnv)
+    retCode, cpuTimeOutput = self.executeAndGetOutput(
+        'dirac-wms-get-queue-cpu-time --CPUNormalizationFactor=%f %s %s -d' % (cpuNormalizationFactor,
+                                                                               configFileArg,
+                                                                               self.pp.localConfigFile),
+        self.pp.installEnv)
 
     if retCode:
       self.log.error("Failed to determine cpu time left in the queue [ERROR %d]" % retCode)
       self.exitWithError(retCode)
-    cpuTimeOutput = cpuTimeOutput.split('\n')[-1]
 
     for line in cpuTimeOutput.split('\n'):
       if "CPU time left determined as" in line:
-        # FIXME: this is horrible
-        cpuTime = int(line.replace("CPU time left determined as", '').strip())
-    self.log.info("CPUTime left (in seconds) is %s" % cpuTime)
+        cpuTimeOutput = line.replace("CPU time left determined as", '').strip()
+        cpuTime = int(cpuTimeOutput)
+        self.log.info("CPUTime left (in seconds) is %d" % cpuTime)
 
     # HS06s = seconds * HS06
     try:
@@ -845,10 +848,10 @@ class LaunchAgent(CommandBase):
     """ c'tor
     """
     super(LaunchAgent, self).__init__(pilotParams)
-    self.inProcessOpts = []
+    self.innerCEOpts = []
     self.jobAgentOpts = []
 
-  def __setInProcessOpts(self):
+  def __setInnerCEOpts(self):
 
     localUid = os.getuid()
     try:
@@ -858,13 +861,21 @@ class LaunchAgent(CommandBase):
       localUser = 'Unknown'
     self.log.info('User Name  = %s' % localUser)
     self.log.info('User Id    = %s' % localUid)
-    self.inProcessOpts = ['-s /Resources/Computing/CEDefaults']
-    self.inProcessOpts.append('-o WorkingDirectory=%s' % self.pp.workingDir)
-    self.inProcessOpts.append('-o /LocalSite/CPUTime=%s' % (int(self.pp.jobCPUReq)))
-    self.jobAgentOpts = ['-o MaxCycles=%s' % self.pp.maxCycles,
-                         '-o PollingTime=%s' % self.pp.pollingTime,
-                         '-o StopOnApplicationFailure=%s' % self.pp.stopOnApplicationFailure,
-                         '-o StopAfterFailedMatches=%s' % self.pp.stopAfterFailedMatches]
+    self.innerCEOpts = ['-s /Resources/Computing/CEDefaults']
+    self.innerCEOpts.append('-o WorkingDirectory=%s' % self.pp.workingDir)
+    self.innerCEOpts.append('-o /LocalSite/CPUTime=%s' % (int(self.pp.jobCPUReq)))
+    if self.pp.ceType == 'Pool':
+      self.jobAgentOpts = ['-o MaxCycles=%s' % max(self.pp.pilotProcessors, self.pp.maxCycles),
+                           '-o PollingTime=%s' % min(5, self.pp.pollingTime),
+                           '-o StopOnApplicationFailure=False',
+                           '-o StopAfterFailedMatches=%s' % max(self.pp.pilotProcessors,
+                                                                self.pp.stopAfterFailedMatches),
+                           '-o FillingModeFlag=True']
+    else:
+      self.jobAgentOpts = ['-o MaxCycles=%s' % self.pp.maxCycles,
+                           '-o PollingTime=%s' % self.pp.pollingTime,
+                           '-o StopOnApplicationFailure=%s' % self.pp.stopOnApplicationFailure,
+                           '-o StopAfterFailedMatches=%s' % self.pp.stopAfterFailedMatches]
 
     if self.debugFlag:
       self.jobAgentOpts.append('-o LogLevel=DEBUG')
@@ -873,23 +884,23 @@ class LaunchAgent(CommandBase):
 
     if self.pp.userGroup:
       self.log.debug('Setting DIRAC Group to "%s"' % self.pp.userGroup)
-      self.inProcessOpts .append('-o OwnerGroup="%s"' % self.pp.userGroup)
+      self.innerCEOpts.append('-o OwnerGroup="%s"' % self.pp.userGroup)
 
     if self.pp.userDN:
       self.log.debug('Setting Owner DN to "%s"' % self.pp.userDN)
-      self.inProcessOpts.append('-o OwnerDN="%s"' % self.pp.userDN)
+      self.innerCEOpts.append('-o OwnerDN="%s"' % self.pp.userDN)
 
     if self.pp.useServerCertificate:
       self.log.debug('Setting UseServerCertificate flag')
-      self.inProcessOpts.append('-o /DIRAC/Security/UseServerCertificate=yes')
+      self.innerCEOpts.append('-o /DIRAC/Security/UseServerCertificate=yes')
 
     # The instancePath is where the agent works
-    self.inProcessOpts.append('-o /LocalSite/InstancePath=%s' % self.pp.workingDir)
+    self.innerCEOpts.append('-o /LocalSite/InstancePath=%s' % self.pp.workingDir)
 
     # The file pilot.cfg has to be created previously by ConfigureDIRAC
     if self.pp.localConfigFile:
-      self.inProcessOpts.append(' -o /AgentJobRequirements/ExtraOptions=%s' % self.pp.localConfigFile)
-      self.inProcessOpts.append(self.pp.localConfigFile)
+      self.innerCEOpts.append(' -o /AgentJobRequirements/ExtraOptions=%s' % self.pp.localConfigFile)
+      self.innerCEOpts.append(self.pp.localConfigFile)
 
   def __startJobAgent(self):
     """ Starting of the JobAgent (or of a user-defined command)
@@ -915,7 +926,7 @@ class LaunchAgent(CommandBase):
 
     jobAgent = '%s WorkloadManagement/JobAgent %s %s %s' % (diracAgentScript,
                                                             " ".join(self.jobAgentOpts),
-                                                            " ".join(self.inProcessOpts),
+                                                            " ".join(self.innerCEOpts),
                                                             " ".join(extraCFG))
 
     retCode, _output = self.executeAndGetOutput(jobAgent, self.pp.installEnv)
@@ -930,7 +941,7 @@ class LaunchAgent(CommandBase):
   def execute(self):
     """ What is called all the time
     """
-    self.__setInProcessOpts()
+    self.__setInnerCEOpts()
     self.__startJobAgent()
 
     sys.exit(0)
