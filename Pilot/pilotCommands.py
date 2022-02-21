@@ -260,11 +260,13 @@ class InstallDIRAC(CommandBase):
             machine = os.uname()[4]  # py2
 
         installerName = "DIRACOS-Linux-%s.sh" % machine
+        diracos_env = dict(self.pp.installEnv)
+        diracos_env.update({"MAMBA_EXTRACT_THREADS": 1})
 
         # 2. Try to install from CVMFS
 
         retCode, _ = self.executeAndGetOutput(
-            "bash /cvmfs/dirac.egi.eu/installSource/%s" % installerName, self.pp.installEnv
+            "bash /cvmfs/dirac.egi.eu/installSource/%s" % installerName, diracos_env
         )
         if retCode:
             self.log.warn("Could not install DIRACOS from CVMFS [ERROR %d]" % retCode)
@@ -278,7 +280,7 @@ class InstallDIRAC(CommandBase):
                 self.exitWithError(1)
 
             # 4. bash DIRACOS-Linux-$(uname -m).sh
-            retCode, _ = self.executeAndGetOutput("bash %s" % installerName, self.pp.installEnv)
+            retCode, _ = self.executeAndGetOutput("bash %s" % installerName, diracos_env)
             if retCode:
                 self.log.error("Could not install DIRACOS [ERROR %d]" % retCode)
                 self.exitWithError(retCode)
