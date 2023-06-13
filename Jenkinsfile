@@ -88,7 +88,7 @@ node('lhcbci-cernvm4-03') {
                                     source diracos/diracosrc;\
                                     source \$WORKSPACE/TestCode/Pilot/tests/CI/pilot_ci.sh;\
                                     downloadProxy;\
-                                    python \$WORKSPACE/TestCode/DIRAC/tests/Workflow/Integration/Test_UserJobs.py pilot.cfg -o /DIRAC/Security/UseServerCertificate=no -ddd"
+                                    python \$WORKSPACE/TestCode/DIRAC/tests/Workflow/Integration/Test_UserJobs.py --cfg pilot.cfg -o /DIRAC/Security/UseServerCertificate=no -ddd"
                                 '''
                             }
                         } catch (e) {
@@ -119,7 +119,7 @@ node('lhcbci-cernvm4-03') {
                                     source diracos/diracosrc;\
                                     source \$WORKSPACE/TestCode/Pilot/tests/CI/pilot_ci.sh;\
                                     downloadProxy;\
-                                    python \$WORKSPACE/TestCode/DIRAC/tests/Workflow/Regression/Test_RegressionUserJobs.py pilot.cfg -o /DIRAC/Security/UseServerCertificate=no -ddd"
+                                    python \$WORKSPACE/TestCode/DIRAC/tests/Workflow/Regression/Test_RegressionUserJobs.py --cfg pilot.cfg -o /DIRAC/Security/UseServerCertificate=no -ddd"
                                 '''
                             }
                         } catch (e) {
