@@ -270,3 +270,55 @@ jobs:
           sed -i "s#VAR_USERDN#/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=alboyer/CN=819281/CN=Alexandre Franck Boyer#g" pilot.json
           sed -i "s#VAR_USERDN_GRIDPP#${DIRACUSERDN_GRIDPP}#g" pilot.json
           python dirac-pilot.py -M 1 -S DIRAC-Certification -N jenkins-lhcb-d.cern.ch -Q jenkins-queue_not_important -n DIRAC.Jenkins.ch -e LHCb -l LHCb -E LHCbPilot --preinstalledEnvPrefix=/cvmfs/lhcb.cern.ch/lhcbdirac/ --cert --certLocation=${GITHUB_WORKSPACE}/Pilot/etc/grid-security --debug
+
+
+
+  ##################################
+  #### Belle2
+
+  ext-belle2_integration:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        pilot_schema:
+          - pilot_oldSchema.json
+          - pilot_newSchema.json
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cvmfs-contrib/github-action-cvmfs@v3
+
+      - name: Test CernVM-FS
+        run: ls /cvmfs/belle.kek.jp
+
+      - name: Retrieve the secret and decode it to a file
+        env:
+          HOSTCERT_BASE64: ${{ secrets.HOSTCERT_BASE64 }}
+          HOSTKEY_BASE64: ${{ secrets.HOSTKEY_BASE64 }}
+        run: |
+          cd Pilot
+          mkdir -p etc/grid-security/vomses
+          mkdir -p etc/grid-security/vomsdir
+          mkdir -p etc/grid-security/certificates
+          echo "$HOSTCERT_BASE64" | base64 --decode > etc/grid-security/hostcert.pem
+          echo "$HOSTKEY_BASE64" | base64 --decode > etc/grid-security/hostkey.pem
+          chmod 440 etc/grid-security/hostcert.pem
+          chmod 400 etc/grid-security/hostkey.pem
+      - name: tests
+        env:
+          X509_CERT_DIR: /cvmfs/grid.cern.ch/etc/grid-security/certificates
+          X509_VOMS_DIR: /cvmfs/grid.cern.ch/etc/grid-security/vomsdir
+          DIRAC_VOMSES: /cvmfs/grid.cern.ch/etc/grid-security/vomses
+        run: |
+          cd Pilot
+          cp /cvmfs/belle.kek.jp/grid/pilot/pro/BellePilotCommands.py .
+          cp ../tests/CI/${{ matrix.pilot_schema }} pilot.json
+          sed -i "s/VAR_JENKINS_SITE/DIRAC.Jenkins.ch/g" pilot.json
+          sed -i "s/VAR_JENKINS_CE/jenkins-belle.cern.ch/g" pilot.json
+          sed -i "s/VAR_JENKINS_QUEUE/jenkins-queue_not_important/g" pilot.json
+          sed -i "s/VAR_DIRAC_VERSION/production/g" pilot.json
+          sed -i "s#VAR_CS#https://lbcertifdirac70.cern.ch:9135/Configuration/Server#g" pilot.json
+          sed -i "s#VAR_USERDN#/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=alboyer/CN=819281/CN=Alexandre Franck Boyer#g" pilot.json
+          sed -i "s#VAR_USERDN_GRIDPP#${DIRACUSERDN_GRIDPP}#g" pilot.json
+          python dirac-pilot.py -M 1 -S DIRAC-Certification -N jenkins-belle.cern.ch -Q jenkins-queue_not_important -n DIRAC.Jenkins.ch -e Belle -l Belle -E BellePilot --cert --certLocation=${GITHUB_WORKSPACE}/Pilot/etc/grid-security --debug

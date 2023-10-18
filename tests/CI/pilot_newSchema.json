@@ -77,7 +77,11 @@
 		"jenkins-lhcb-d.cern.ch": {
 			"Site": "VAR_JENKINS_SITE",
 			"GridCEType": "LHCbD"
-		}	  
+		},	  
+		"jenkins-belle.cern.ch": {
+			"Site": "VAR_JENKINS_SITE",
+			"GridCEType": "Belle"
+		}
 	},
 	"Defaults": {
 		"Pilot": {
@@ -87,7 +91,8 @@
 				"TEST-MP": "CheckWorkerNode, InstallDIRAC, ConfigureBasics, RegisterPilot, CheckCECapabilities, CheckWNCapabilities, ConfigureSite, ConfigureArchitecture, ConfigureCPURequirements",
 				"TEST-FULL": "CheckWorkerNode, InstallDIRAC, ConfigureBasics, RegisterPilot, CheckCECapabilities, CheckWNCapabilities, ConfigureSite, ConfigureArchitecture, ConfigureCPURequirements, LaunchAgent",
 				"LHCb": "CheckWorkerNode, LHCbInstallDIRAC, LHCbConfigureBasics, RegisterPilot, CheckCECapabilities, LHCbAddCVMFSTags, CheckWNCapabilities, LHCbConfigureSite, LHCbConfigureArchitecture, LHCbConfigureCPURequirements",
-				"LHCbD": "CheckWorkerNode, InstallDIRAC, LHCbConfigureBasics, RegisterPilot, CheckCECapabilities, LHCbAddCVMFSTags, CheckWNCapabilities, LHCbConfigureSite, LHCbConfigureArchitecture, LHCbConfigureCPURequirements"
+				"LHCbD": "CheckWorkerNode, InstallDIRAC, LHCbConfigureBasics, RegisterPilot, CheckCECapabilities, LHCbAddCVMFSTags, CheckWNCapabilities, LHCbConfigureSite, LHCbConfigureArchitecture, LHCbConfigureCPURequirements",
+				"Belle": "GetPilotVersion, CheckWorkerNode, MakeLinkfromCVMFS, BelleInstallDIRAC, ConfigureBasics, RegisterPilot, CheckCECapabilities, CheckWNCapabilities, ConfigureSite, ConfigureArchitecture, ConfigureCPURequirements, SetRucioPath"
 		    }
 		}
 	},

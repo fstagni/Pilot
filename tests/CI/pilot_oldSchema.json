@@ -60,7 +60,22 @@
           "LHCbConfigureSite",
           "LHCbConfigureArchitecture",
           "LHCbConfigureCPURequirements"
+        ],
+        "Belle": [
+          "GetPilotVersion",
+          "CheckWorkerNode",
+          "MakeLinkfromCVMFS",
+          "BelleInstallDIRAC",
+          "ConfigureBasics",
+          "RegisterPilot",
+          "CheckCECapabilities",
+          "CheckWNCapabilities",
+          "ConfigureSite",
+          "ConfigureArchitecture",
+          "ConfigureCPURequirements",
+          "SetRucioPath"
         ]
+
       },
       "Logging": {
         "LoggingType":"LOCAL_FILE", 
@@ -174,6 +189,10 @@
     "jenkins-lhcb.cern.ch": {
       "Site": "VAR_JENKINS_SITE",
       "GridCEType": "LHCb"
+    },
+    "jenkins-belle.cern.ch": {
+      "Site": "VAR_JENKINS_SITE",
+      "GridCEType": "Belle"
     },
     "jenkins-lhcb-d.cern.ch": {
       "Site": "VAR_JENKINS_SITE",
