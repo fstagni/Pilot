@@ -9,8 +9,7 @@ jobs:
     strategy:
       matrix:
         dirac_branch:
-          - rel-v8r0
-          - integration
+          - 90_more_setup_removals
         pilot_schema:
           - pilot_oldSchema.json
           - pilot_newSchema.json
@@ -50,7 +49,7 @@ jobs:
           g_job="testintegrationworkflow${GITHUB_JOB//-/}"
           pilotUUID="${g_job//_/}""$(shuf -i 2000-65000 -n 1)"
           pilotUUID=$(echo $pilotUUID | rev | cut -c 1-32 | rev)
-          python dirac-pilot.py --modules https://github.com/DIRACGrid/DIRAC.git:::DIRAC:::${{ matrix.dirac_branch }} -M 1 -S DIRAC-Certification -N jenkins.cern.ch -Q jenkins-queue_not_important -n DIRAC.Jenkins.ch --cert --certLocation=${GITHUB_WORKSPACE}/Pilot/etc/grid-security --wnVO=${{ matrix.VO }} --pilotUUID="${pilotUUID}" --debug
+          python dirac-pilot.py --modules https://github.com/fstagni/DIRAC.git:::DIRAC:::${{ matrix.dirac_branch }} -M 1 -S DIRAC-Certification -N jenkins.cern.ch -Q jenkins-queue_not_important -n DIRAC.Jenkins.ch --cert --certLocation=${GITHUB_WORKSPACE}/Pilot/etc/grid-security --wnVO=${{ matrix.VO }} --pilotUUID="${pilotUUID}" --debug
 
 
   integration-cvmfs:
