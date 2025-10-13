@@ -7,10 +7,7 @@ import sys
 import unittest
 from unittest.mock import patch
 
-try:
-    from Pilot.proxyTools import getVO, parseASN1
-except ModuleNotFoundError:
-    from proxyTools import getVO, parseASN1
+from proxyTools import getVO, parseASN1
 
 class TestProxyTools(unittest.TestCase):
     def test_getVO(self):
