@@ -67,11 +67,18 @@ def logFinalizer(func):
             # controlled exit
             pRef = self.pp.pilotReference
             self.log.info(
-                "Flushing the remote logger buffer for pilot on sys.exit(): %s (exit code:%s)" % (pRef, str(exCode))
+                "Flushing the remote logger buffer for pilot on sys.exit(): %s (exit code:%s)"
+                % (pRef, str(exCode))
             )
             self.log.buffer.flush()  # flush the buffer unconditionally (on sys.exit()).
             try:
-                sendMessage(self.log.url, self.log.pilotUUID, self.log.wnVO, "finaliseLogs", {"retCode": str(exCode)})
+                sendMessage(
+                    self.log.url,
+                    self.log.pilotUUID,
+                    self.log.wnVO,
+                    "finaliseLogs",
+                    {"retCode": str(exCode)},
+                )
             except Exception as exc:
                 self.log.error("Remote logger couldn't be finalised %s " % str(exc))
             raise
@@ -113,7 +120,9 @@ class CheckWorkerNode(CommandBase):
         self.log.info("Uname      = %s" % " ".join(os.uname()))
         self.log.info("Host Name  = %s" % socket.gethostname())
         self.log.info("Host FQDN  = %s" % socket.getfqdn())
-        self.log.info("WorkingDir = %s" % self.pp.workingDir)  # this could be different than rootPath
+        self.log.info(
+            "WorkingDir = %s" % self.pp.workingDir
+        )  # this could be different than rootPath
 
         fileName = "/etc/redhat-release"
         if os.path.exists(fileName):
@@ -179,7 +188,8 @@ class CheckWorkerNode(CommandBase):
 
         if diskSpace < self.pp.minDiskSpace:
             self.log.error(
-                "%s MB < %s MB, not enough local disk space available, exiting" % (diskSpace, self.pp.minDiskSpace)
+                "%s MB < %s MB, not enough local disk space available, exiting"
+                % (diskSpace, self.pp.minDiskSpace)
             )
             self.exitWithError(1)
 
@@ -195,14 +205,21 @@ class InstallDIRAC(CommandBase):
     def _sourceEnvironmentFile(self):
         """Source the $DIRAC_RC_FILE and save the created environment in self.pp.installEnv"""
 
-        retCode, output = self.executeAndGetOutput("bash -c 'source $DIRAC_RC_PATH && env'", self.pp.installEnv)
+        retCode, output = self.executeAndGetOutput(
+            "bash -c 'source $DIRAC_RC_PATH && env'", self.pp.installEnv
+        )
         if retCode:
-            self.log.error("Could not parse the %s file [ERROR %d]" % (self.pp.installEnv["DIRAC_RC_PATH"], retCode))
+            self.log.error(
+                "Could not parse the %s file [ERROR %d]"
+                % (self.pp.installEnv["DIRAC_RC_PATH"], retCode)
+            )
             self.exitWithError(retCode)
         for line in output.split("\n"):
             try:
                 var, value = [vx.strip() for vx in line.split("=", 1)]
-                if var == "_" or "SSH" in var or "{" in value or "}" in value:  # Avoiding useless/confusing stuff
+                if (
+                    var == "_" or "SSH" in var or "{" in value or "}" in value
+                ):  # Avoiding useless/confusing stuff
                     continue
                 self.pp.installEnv[var] = value
             except (IndexError, ValueError):
@@ -218,7 +235,13 @@ class InstallDIRAC(CommandBase):
 
         with open(eFile, "w") as fd:
             for var, val in self.pp.installEnv.items():
-                if var == "_" or var == "X509_USER_PROXY" or "SSH" in var or "{" in val or "}" in val:
+                if (
+                    var == "_"
+                    or var == "X509_USER_PROXY"
+                    or "SSH" in var
+                    or "{" in val
+                    or "}" in val
+                ):
                     continue
                 if " " in val and val[0] != '"':
                     val = '"%s"' % val
@@ -229,21 +252,29 @@ class InstallDIRAC(CommandBase):
         """Get preinstalled environment script if any"""
 
         self.log.debug("self.pp.preinstalledEnv = %s" % self.pp.preinstalledEnv)
-        self.log.debug("self.pp.preinstalledEnvPrefix = %s" % self.pp.preinstalledEnvPrefix)
+        self.log.debug(
+            "self.pp.preinstalledEnvPrefix = %s" % self.pp.preinstalledEnvPrefix
+        )
         self.log.debug("self.pp.CVMFS_locations = %s" % self.pp.CVMFS_locations)
 
         preinstalledEnvScript = self.pp.preinstalledEnv
         if not preinstalledEnvScript and self.pp.preinstalledEnvPrefix:
             version = self.pp.releaseVersion or "pro"
             arch = platform.system() + "-" + platform.machine()
-            preinstalledEnvScript = os.path.join(self.pp.preinstalledEnvPrefix, version, arch, "diracosrc")
+            preinstalledEnvScript = os.path.join(
+                self.pp.preinstalledEnvPrefix, version, arch, "diracosrc"
+            )
 
         if not preinstalledEnvScript and self.pp.CVMFS_locations:
             for CVMFS_location in self.pp.CVMFS_locations:
                 version = self.pp.releaseVersion or "pro"
                 arch = platform.system() + "-" + platform.machine()
                 preinstalledEnvScript = os.path.join(
-                    CVMFS_location, self.pp.releaseProject.lower() + "dirac", version, arch, "diracosrc"
+                    CVMFS_location,
+                    self.pp.releaseProject.lower() + "dirac",
+                    version,
+                    arch,
+                    "diracosrc",
                 )
                 if os.path.isfile(preinstalledEnvScript):
                     break
@@ -290,7 +321,8 @@ class InstallDIRAC(CommandBase):
 
             # 3. Get the installer from GitHub otherwise
             if not retrieveUrlTimeout(
-                "https://github.com/DIRACGrid/DIRACOS2/releases/latest/download/%s" % installerName,
+                "https://github.com/DIRACGrid/DIRACOS2/releases/latest/download/%s"
+                % installerName,
                 installerName,
                 self.log,
             ):
@@ -300,7 +332,9 @@ class InstallDIRAC(CommandBase):
                 shutil.rmtree("diracos")
 
             # 4. bash DIRACOS-Linux-$(uname -m).sh
-            retCode, _ = self.executeAndGetOutput("bash %s 2>&1" % installerName, installEnv)
+            retCode, _ = self.executeAndGetOutput(
+                "bash %s 2>&1" % installerName, installEnv
+            )
             if retCode:
                 self.log.error("Could not install DIRACOS [ERROR %d]" % retCode)
                 self.exitWithError(retCode)
@@ -313,8 +347,16 @@ class InstallDIRAC(CommandBase):
         if self.pp.userEnvVariables:
             userEnvVariables = dict(
                 zip(
-                    [name.split(":::")[0] for name in self.pp.userEnvVariables.replace(" ", "").split(",")],
-                    [value.split(":::")[1] for value in self.pp.userEnvVariables.replace(" ", "").split(",")],
+                    [
+                        name.split(":::")[0]
+                        for name in self.pp.userEnvVariables.replace(" ", "").split(",")
+                    ],
+                    [
+                        value.split(":::")[1]
+                        for value in self.pp.userEnvVariables.replace(" ", "").split(
+                            ","
+                        )
+                    ],
                 )
             )
             lines = []
@@ -326,7 +368,9 @@ class InstallDIRAC(CommandBase):
                 diracosrc.write("\n".join(lines))
 
         # 6. source diracos/diracosrc
-        self.pp.installEnv["DIRAC_RC_PATH"] = os.path.join(os.getcwd(), "diracos/diracosrc")
+        self.pp.installEnv["DIRAC_RC_PATH"] = os.path.join(
+            os.getcwd(), "diracos/diracosrc"
+        )
         self._sourceEnvironmentFile()
         self._saveEnvInFile()
 
@@ -353,19 +397,35 @@ class InstallDIRAC(CommandBase):
                 pipInstalling += "[pilot]"
 
                 # pipInstalling = "pip install %s%s@%s#egg=%s[pilot]" % (prefix, url, branch, project)
-                retCode, output = self.executeAndGetOutput(pipInstalling, self.pp.installEnv)
+                retCode, output = self.executeAndGetOutput(
+                    pipInstalling, self.pp.installEnv
+                )
                 if retCode:
                     self.log.error("Could not %s [ERROR %d]" % (pipInstalling, retCode))
                     self.exitWithError(retCode)
         else:
             # pip install DIRAC[pilot]==version ExtensionDIRAC[pilot]==version_ext
-            if not self.releaseVersion or self.releaseVersion in ["master", "main", "integration"]:
-                cmd = "%s %sDIRAC[pilot]" % (pipInstallingPrefix, self.pp.releaseProject)
+            if not self.releaseVersion or self.releaseVersion in [
+                "master",
+                "main",
+                "integration",
+            ]:
+                cmd = "%s %sDIRAC[pilot]" % (
+                    pipInstallingPrefix,
+                    self.pp.releaseProject,
+                )
             else:
-                cmd = "%s %sDIRAC[pilot]==%s" % (pipInstallingPrefix, self.pp.releaseProject, self.releaseVersion)
+                cmd = "%s %sDIRAC[pilot]==%s" % (
+                    pipInstallingPrefix,
+                    self.pp.releaseProject,
+                    self.releaseVersion,
+                )
             retCode, output = self.executeAndGetOutput(cmd, self.pp.installEnv)
             if retCode:
-                self.log.error("Could not pip install %s [ERROR %d]" % (self.releaseVersion, retCode))
+                self.log.error(
+                    "Could not pip install %s [ERROR %d]"
+                    % (self.releaseVersion, retCode)
+                )
                 self.exitWithError(retCode)
 
     @logFinalizer
@@ -386,19 +446,30 @@ class InstallDIRAC(CommandBase):
                 return
             # if we are here, we have a preinstalled environment
             self._sourceEnvironmentFile()
-            self.log.info("source DIRAC env DONE, for release %s" % self.pp.releaseVersion)
+            self.log.info(
+                "source DIRAC env DONE, for release %s" % self.pp.releaseVersion
+            )
             # environment variables to add?
             if self.pp.userEnvVariables:
                 # User-requested environment variables (comma-separated, name and value separated by ":::")
-                newEnvVars = dict(name.split(":::", 1) for name in self.pp.userEnvVariables.replace(" ", "").split(","))
-                self.log.info("Adding env variable(s) to the environment : %s" % newEnvVars)
+                newEnvVars = dict(
+                    name.split(":::", 1)
+                    for name in self.pp.userEnvVariables.replace(" ", "").split(",")
+                )
+                self.log.info(
+                    "Adding env variable(s) to the environment : %s" % newEnvVars
+                )
                 self.pp.installEnv.update(newEnvVars)
 
         except OSError as e:
-            self.log.error("Exception when trying to source the DIRAC environment: %s" % str(e))
+            self.log.error(
+                "Exception when trying to source the DIRAC environment: %s" % str(e)
+            )
             if "cvmfsOnly" in self.pp.genericOption:
                 self.exitWithError(1)
-            self.log.warn("Source of the DIRAC environment NOT DONE: starting traditional DIRAC installation")
+            self.log.warn(
+                "Source of the DIRAC environment NOT DONE: starting traditional DIRAC installation"
+            )
             self._localInstallDIRAC()
 
         finally:
@@ -439,7 +510,9 @@ class ConfigureBasics(CommandBase):
 
         VOs may want to replace/extend the _getBasicsCFG and _getSecurityCFG functions
         """
-        self.pp.flavour, self.pp.pilotReference, self.pp.batchSystemInfo = getSubmitterInfo(self.pp.ceName)
+        self.pp.flavour, self.pp.pilotReference, self.pp.batchSystemInfo = (
+            getSubmitterInfo(self.pp.ceName)
+        )
 
         if not self.pp.pilotReference:
             self.pp.pilotReference = self.pp.pilotUUID
@@ -452,11 +525,15 @@ class ConfigureBasics(CommandBase):
         if self.pp.localConfigFile:
             self.cfg.append("-O %s" % self.pp.localConfigFile)  # here, only as output
             # Make sure that this configuration is available in the user job environment
-            self.pp.installEnv["DIRACSYSCONFIG"] = os.path.realpath(self.pp.localConfigFile)
+            self.pp.installEnv["DIRACSYSCONFIG"] = os.path.realpath(
+                self.pp.localConfigFile
+            )
 
         configureCmd = "%s %s" % (self.pp.configureScript, " ".join(self.cfg))
 
-        retCode, _configureOutData = self.executeAndGetOutput(configureCmd, self.pp.installEnv)
+        retCode, _configureOutData = self.executeAndGetOutput(
+            configureCmd, self.pp.installEnv
+        )
 
         if retCode:
             self.log.error("Could not configure DIRAC basics [ERROR %d]" % retCode)
@@ -488,23 +565,34 @@ class ConfigureBasics(CommandBase):
         if self.pp.gateway:
             self.cfg.append('-W "%s"' % self.pp.gateway)
         if self.pp.userGroup:
-            self.cfg.append('-o /AgentJobRequirements/OwnerGroup="%s"' % self.pp.userGroup)
+            self.cfg.append(
+                '-o /AgentJobRequirements/OwnerGroup="%s"' % self.pp.userGroup
+            )
         if self.pp.userDN:
             self.cfg.append('-o /AgentJobRequirements/OwnerDN="%s"' % self.pp.userDN)
         self.cfg.append("-o /LocalSite/ReleaseVersion=%s" % self.releaseVersion)
         # add the installation locations
-        self.cfg.append("-o /LocalSite/CVMFS_locations=%s" % ",".join(self.pp.CVMFS_locations))
+        self.cfg.append(
+            "-o /LocalSite/CVMFS_locations=%s" % ",".join(self.pp.CVMFS_locations)
+        )
 
         if self.pp.wnVO:
-            self.cfg.append('-o "/Resources/Computing/CEDefaults/VirtualOrganization=%s"' % self.pp.wnVO)
+            self.cfg.append(
+                '-o "/Resources/Computing/CEDefaults/VirtualOrganization=%s"'
+                % self.pp.wnVO
+            )
 
     def _getSecurityCFG(self):
         """Sets security-related env variables, if needed"""
         # Need to know host cert and key location in case they are needed
         if self.pp.useServerCertificate:
             self.cfg.append("--UseServerCertificate")
-            self.cfg.append("-o /DIRAC/Security/CertFile=%s/hostcert.pem" % self.pp.certsLocation)
-            self.cfg.append("-o /DIRAC/Security/KeyFile=%s/hostkey.pem" % self.pp.certsLocation)
+            self.cfg.append(
+                "-o /DIRAC/Security/CertFile=%s/hostcert.pem" % self.pp.certsLocation
+            )
+            self.cfg.append(
+                "-o /DIRAC/Security/KeyFile=%s/hostkey.pem" % self.pp.certsLocation
+            )
 
         # If DIRAC (or its extension) is installed in CVMFS do not download VOMS and CAs
         if self.pp.preinstalledEnv:
@@ -544,7 +632,9 @@ class RegisterPilot(CommandBase):
         )
         retCode, _ = self.executeAndGetOutput(checkCmd, self.pp.installEnv)
         if retCode:
-            self.log.error("Could not get execute dirac-admin-add-pilot [ERROR %d]" % retCode)
+            self.log.error(
+                "Could not get execute dirac-admin-add-pilot [ERROR %d]" % retCode
+            )
 
 
 class CheckCECapabilities(CommandBase):
@@ -599,12 +689,18 @@ class CheckCECapabilities(CommandBase):
         self.pp.queueParameters = resourceDict
         for queueParamName, queueParamValue in self.pp.queueParameters.items():
             if isinstance(queueParamValue, list):  # for the tags
-                queueParamValue = ",".join([str(qpv).strip() for qpv in queueParamValue])
-            self.cfg.append("-o /LocalSite/%s=%s" % (queueParamName, quote(queueParamValue)))
+                queueParamValue = ",".join(
+                    [str(qpv).strip() for qpv in queueParamValue]
+                )
+            self.cfg.append(
+                "-o /LocalSite/%s=%s" % (queueParamName, quote(queueParamValue))
+            )
 
         if self.cfg:
             if self.pp.localConfigFile:
-                self.cfg.append("-O %s" % self.pp.localConfigFile)  # this file is as output
+                self.cfg.append(
+                    "-O %s" % self.pp.localConfigFile
+                )  # this file is as output
 
             self.cfg.append("-FDMH")
 
@@ -612,13 +708,18 @@ class CheckCECapabilities(CommandBase):
                 self.cfg.append("-ddd")
 
             configureCmd = "%s %s" % (self.pp.configureScript, " ".join(self.cfg))
-            retCode, _configureOutData = self.executeAndGetOutput(configureCmd, self.pp.installEnv)
+            retCode, _configureOutData = self.executeAndGetOutput(
+                configureCmd, self.pp.installEnv
+            )
             if retCode:
                 self.log.error("Could not configure DIRAC [ERROR %d]" % retCode)
                 self.exitWithError(retCode)
 
         else:
-            self.log.debug("No CE parameters (tags) defined for %s/%s" % (self.pp.ceName, self.pp.queueName))
+            self.log.debug(
+                "No CE parameters (tags) defined for %s/%s"
+                % (self.pp.ceName, self.pp.queueName)
+            )
 
 
 class CheckWNCapabilities(CommandBase):
@@ -670,12 +771,17 @@ class CheckWNCapabilities(CommandBase):
         self.pp.pilotProcessors = numberOfProcessorsOnWN
 
         self.log.info("pilotProcessors = %d" % self.pp.pilotProcessors)
-        self.cfg.append('-o "/Resources/Computing/CEDefaults/NumberOfProcessors=%d"' % self.pp.pilotProcessors)
+        self.cfg.append(
+            '-o "/Resources/Computing/CEDefaults/NumberOfProcessors=%d"'
+            % self.pp.pilotProcessors
+        )
 
         maxRAM = self.pp.queueParameters.get("MaxRAM", maxRAM)
         if maxRAM:
             try:
-                self.cfg.append('-o "/Resources/Computing/CEDefaults/MaxRAM=%d"' % int(maxRAM))
+                self.cfg.append(
+                    '-o "/Resources/Computing/CEDefaults/MaxRAM=%d"' % int(maxRAM)
+                )
             except ValueError:
                 self.log.warn("MaxRAM is not an integer, will not fill it")
         else:
@@ -683,17 +789,24 @@ class CheckWNCapabilities(CommandBase):
 
         if numberOfGPUs:
             self.log.info("numberOfGPUs = %d" % int(numberOfGPUs))
-            self.cfg.append('-o "/Resources/Computing/CEDefaults/NumberOfGPUs=%d"' % int(numberOfGPUs))
+            self.cfg.append(
+                '-o "/Resources/Computing/CEDefaults/NumberOfGPUs=%d"'
+                % int(numberOfGPUs)
+            )
 
         # Add normal and required tags to the configuration
         self.pp.tags = list(set(self.pp.tags))
         if self.pp.tags:
-            self.cfg.append('-o "/Resources/Computing/CEDefaults/Tag=%s"' % ",".join((str(x) for x in self.pp.tags)))
+            self.cfg.append(
+                '-o "/Resources/Computing/CEDefaults/Tag=%s"'
+                % ",".join((str(x) for x in self.pp.tags))
+            )
 
         self.pp.reqtags = list(set(self.pp.reqtags))
         if self.pp.reqtags:
             self.cfg.append(
-                '-o "/Resources/Computing/CEDefaults/RequiredTag=%s"' % ",".join((str(x) for x in self.pp.reqtags))
+                '-o "/Resources/Computing/CEDefaults/RequiredTag=%s"'
+                % ",".join((str(x) for x in self.pp.reqtags))
             )
 
         if self.pp.useServerCertificate:
@@ -710,7 +823,9 @@ class CheckWNCapabilities(CommandBase):
             self.cfg.append("-FDMH")
 
             configureCmd = "%s %s" % (self.pp.configureScript, " ".join(self.cfg))
-            retCode, _configureOutData = self.executeAndGetOutput(configureCmd, self.pp.installEnv)
+            retCode, _configureOutData = self.executeAndGetOutput(
+                configureCmd, self.pp.installEnv
+            )
             if retCode:
                 self.log.error("Could not configure DIRAC [ERROR %d]" % retCode)
                 self.exitWithError(retCode)
@@ -734,17 +849,31 @@ class ConfigureSite(CommandBase):
 
         # Add batch system details to the configuration
         # Can be used by the pilot/job later on, to interact with the batch system
-        self.cfg.append("-o /LocalSite/BatchSystemInfo/Type=%s" % self.pp.batchSystemInfo.get("Type", "Unknown"))
-        self.cfg.append("-o /LocalSite/BatchSystemInfo/JobID=%s" % self.pp.batchSystemInfo.get("JobID", "Unknown"))
+        self.cfg.append(
+            "-o /LocalSite/BatchSystemInfo/Type=%s"
+            % self.pp.batchSystemInfo.get("Type", "Unknown")
+        )
+        self.cfg.append(
+            "-o /LocalSite/BatchSystemInfo/JobID=%s"
+            % self.pp.batchSystemInfo.get("JobID", "Unknown")
+        )
 
         batchSystemParams = self.pp.batchSystemInfo.get("Parameters", {})
-        self.cfg.append("-o /LocalSite/BatchSystemInfo/Parameters/Queue=%s" % batchSystemParams.get("Queue", "Unknown"))
         self.cfg.append(
-            "-o /LocalSite/BatchSystemInfo/Parameters/BinaryPath=%s" % batchSystemParams.get("BinaryPath", "Unknown")
+            "-o /LocalSite/BatchSystemInfo/Parameters/Queue=%s"
+            % batchSystemParams.get("Queue", "Unknown")
         )
-        self.cfg.append("-o /LocalSite/BatchSystemInfo/Parameters/Host=%s" % batchSystemParams.get("Host", "Unknown"))
         self.cfg.append(
-            "-o /LocalSite/BatchSystemInfo/Parameters/InfoPath=%s" % batchSystemParams.get("InfoPath", "Unknown")
+            "-o /LocalSite/BatchSystemInfo/Parameters/BinaryPath=%s"
+            % batchSystemParams.get("BinaryPath", "Unknown")
+        )
+        self.cfg.append(
+            "-o /LocalSite/BatchSystemInfo/Parameters/Host=%s"
+            % batchSystemParams.get("Host", "Unknown")
+        )
+        self.cfg.append(
+            "-o /LocalSite/BatchSystemInfo/Parameters/InfoPath=%s"
+            % batchSystemParams.get("InfoPath", "Unknown")
         )
 
         self.cfg.append('-n "%s"' % self.pp.site)
@@ -765,8 +894,12 @@ class ConfigureSite(CommandBase):
 
         if self.pp.useServerCertificate:
             self.cfg.append("--UseServerCertificate")
-            self.cfg.append("-o /DIRAC/Security/CertFile=%s/hostcert.pem" % self.pp.certsLocation)
-            self.cfg.append("-o /DIRAC/Security/KeyFile=%s/hostkey.pem" % self.pp.certsLocation)
+            self.cfg.append(
+                "-o /DIRAC/Security/CertFile=%s/hostcert.pem" % self.pp.certsLocation
+            )
+            self.cfg.append(
+                "-o /DIRAC/Security/KeyFile=%s/hostkey.pem" % self.pp.certsLocation
+            )
 
         # these are needed as this is not the first time we call dirac-configure
         self.cfg.append("-FDMH")
@@ -779,7 +912,9 @@ class ConfigureSite(CommandBase):
 
         configureCmd = "%s %s" % (self.pp.configureScript, " ".join(self.cfg))
 
-        retCode, _configureOutData = self.executeAndGetOutput(configureCmd, self.pp.installEnv)
+        retCode, _configureOutData = self.executeAndGetOutput(
+            configureCmd, self.pp.installEnv
+        )
 
         if retCode:
             self.log.error("Could not configure DIRAC [ERROR %d]" % retCode)
@@ -808,17 +943,26 @@ class ConfigureArchitecture(CommandBase):
         archScript = self.pp.architectureScript
         if self.pp.architectureScript.split(" ")[0] == "dirac-apptainer-exec":
             archScript = " ".join(self.pp.architectureScript.split(" ")[1:])
-        
+
         architectureCmd = "%s %s -ddd" % (archScript, " ".join(cfg))
 
         if self.pp.architectureScript.split(" ")[0] == "dirac-apptainer-exec":
-            architectureCmd = "dirac-apptainer-exec '%s' %s" % (architectureCmd, " ".join(cfg))
+            architectureCmd = "dirac-apptainer-exec '%s' %s" % (
+                architectureCmd,
+                " ".join(cfg),
+            )
 
-        retCode, localArchitecture = self.executeAndGetOutput(architectureCmd, self.pp.installEnv)
+        retCode, localArchitecture = self.executeAndGetOutput(
+            architectureCmd, self.pp.installEnv
+        )
         if retCode:
-            self.log.error("There was an error getting the platform [ERROR %d]" % retCode)
+            self.log.error(
+                "There was an error getting the platform [ERROR %d]" % retCode
+            )
             self.exitWithError(retCode)
-        self.log.info("Architecture determined: %s" % localArchitecture.strip().split("\n")[-1])
+        self.log.info(
+            "Architecture determined: %s" % localArchitecture.strip().split("\n")[-1]
+        )
 
         # standard options
         cfg = ["-FDMH"]  # force update, skip CA checks, skip CA download, skip VOMS
@@ -839,17 +983,21 @@ class ConfigureArchitecture(CommandBase):
         cfg.append("-o /LocalSite/Platform=%s" % platform.machine())
 
         configureCmd = "%s %s" % (self.pp.configureScript, " ".join(cfg))
-        retCode, _configureOutData = self.executeAndGetOutput(configureCmd, self.pp.installEnv)
+        retCode, _configureOutData = self.executeAndGetOutput(
+            configureCmd, self.pp.installEnv
+        )
         if retCode:
             self.log.error("Configuration error [ERROR %d]" % retCode)
             self.exitWithError(retCode)
 
         return localArchitecture
 
+
 class ConfigureArchitectureWithoutCLI(CommandBase):
     """This command determines the platform.
     Separated from the ConfigureDIRAC command for easier extensibility.
     """
+
     def getPlatformString(self):
         # Modified to return our desired platform string, R. Graciani
         platformTuple = (platform.system(), platform.machine())
@@ -877,7 +1025,6 @@ class ConfigureArchitectureWithoutCLI(CommandBase):
             self.log.error("Configuration error [ERROR %s]" % str(e))
             self.exitWithError(1)
 
-
         cfg = ["-FDMH"]  # force update, skip CA checks, skip CA download, skip VOMS
         if self.pp.useServerCertificate:
             cfg.append("--UseServerCertificate")
@@ -896,7 +1043,9 @@ class ConfigureArchitectureWithoutCLI(CommandBase):
         cfg.append("-o /LocalSite/Platform=%s" % platform.machine())
 
         configureCmd = "%s %s" % (self.pp.configureScript, " ".join(cfg))
-        retCode, _configureOutData = self.executeAndGetOutput(configureCmd, self.pp.installEnv)
+        retCode, _configureOutData = self.executeAndGetOutput(
+            configureCmd, self.pp.installEnv
+        )
         if retCode:
             self.log.error("Configuration error [ERROR %d]" % retCode)
             self.exitWithError(retCode)
@@ -919,7 +1068,11 @@ class ConfigureCPURequirements(CommandBase):
         if self.pp.useServerCertificate:
             configFileArg = "-o /DIRAC/Security/UseServerCertificate=yes"
         if self.pp.localConfigFile:
-            configFileArg = "%s -R %s --cfg %s" % (configFileArg, self.pp.localConfigFile, self.pp.localConfigFile)
+            configFileArg = "%s -R %s --cfg %s" % (
+                configFileArg,
+                self.pp.localConfigFile,
+                self.pp.localConfigFile,
+            )
         retCode, cpuNormalizationFactorOutput = self.executeAndGetOutput(
             "dirac-wms-cpu-normalization -U %s -d" % configFileArg, self.pp.installEnv
         )
@@ -949,7 +1102,9 @@ class ConfigureCPURequirements(CommandBase):
         )
 
         if retCode:
-            self.log.error("Failed to determine cpu time left in the queue [ERROR %d]" % retCode)
+            self.log.error(
+                "Failed to determine cpu time left in the queue [ERROR %d]" % retCode
+            )
             self.exitWithError(retCode)
 
         for line in cpuTimeOutput.split("\n"):
@@ -962,7 +1117,10 @@ class ConfigureCPURequirements(CommandBase):
         try:
             # determining the CPU time left (in HS06s)
             self.pp.jobCPUReq = float(cpuTime) * float(cpuNormalizationFactor)
-            self.log.info("Queue length (which is also set as CPUTimeLeft) is %f" % self.pp.jobCPUReq)
+            self.log.info(
+                "Queue length (which is also set as CPUTimeLeft) is %f"
+                % self.pp.jobCPUReq
+            )
         except ValueError:
             self.log.error("Pilot command output does not have the correct format")
             self.exitWithError(1)
@@ -973,12 +1131,18 @@ class ConfigureCPURequirements(CommandBase):
         if self.pp.localConfigFile:
             cfg.append("-O %s" % self.pp.localConfigFile)  # our target file for pilots
             cfg.extend(["--cfg", self.pp.localConfigFile])  # this file is also input
-        cfg.append("-o /LocalSite/CPUTimeLeft=%s" % str(int(self.pp.jobCPUReq)))  # the only real option
+        cfg.append(
+            "-o /LocalSite/CPUTimeLeft=%s" % str(int(self.pp.jobCPUReq))
+        )  # the only real option
 
         configureCmd = "%s %s" % (self.pp.configureScript, " ".join(cfg))
-        retCode, _configureOutData = self.executeAndGetOutput(configureCmd, self.pp.installEnv)
+        retCode, _configureOutData = self.executeAndGetOutput(
+            configureCmd, self.pp.installEnv
+        )
         if retCode:
-            self.log.error("Failed to update CFG file for CPUTimeLeft [ERROR %d]" % retCode)
+            self.log.error(
+                "Failed to update CFG file for CPUTimeLeft [ERROR %d]" % retCode
+            )
             self.exitWithError(retCode)
 
 
@@ -1009,7 +1173,8 @@ class LaunchAgent(CommandBase):
                 "-o MaxCycles=5000",
                 "-o PollingTime=%s" % min(20, self.pp.pollingTime),
                 "-o StopOnApplicationFailure=False",
-                "-o StopAfterFailedMatches=%s" % max(self.pp.pilotProcessors, self.pp.stopAfterFailedMatches),
+                "-o StopAfterFailedMatches=%s"
+                % max(self.pp.pilotProcessors, self.pp.stopAfterFailedMatches),
                 "-o FillingModeFlag=True",
             ]
         else:
@@ -1042,7 +1207,9 @@ class LaunchAgent(CommandBase):
 
         # The file pilot.cfg has to be created previously by ConfigureDIRAC
         if self.pp.localConfigFile:
-            self.innerCEOpts.append(" -o /AgentJobRequirements/ExtraOptions=%s" % self.pp.localConfigFile)
+            self.innerCEOpts.append(
+                " -o /AgentJobRequirements/ExtraOptions=%s" % self.pp.localConfigFile
+            )
             self.innerCEOpts.extend(["--cfg", self.pp.localConfigFile])
 
     def __startJobAgent(self):
@@ -1055,13 +1222,21 @@ class LaunchAgent(CommandBase):
         extraCFG = []
         for i in os.listdir(self.pp.rootPath):
             cfg = os.path.join(self.pp.rootPath, i)
-            if os.path.isfile(cfg) and cfg.endswith(".cfg") and not filecmp.cmp(self.pp.localConfigFile, cfg):
+            if (
+                os.path.isfile(cfg)
+                and cfg.endswith(".cfg")
+                and not filecmp.cmp(self.pp.localConfigFile, cfg)
+            ):
                 extraCFG.extend(["--cfg", cfg])
 
         if self.pp.executeCmd:
             # Execute user command
             self.log.info("Executing user defined command: %s" % self.pp.executeCmd)
-            self.exitWithError(int(os.system("source diracos/diracosrc; %s" % self.pp.executeCmd) / 256))
+            self.exitWithError(
+                int(
+                    os.system("source diracos/diracosrc; %s" % self.pp.executeCmd) / 256
+                )
+            )
 
         self.log.info("Starting JobAgent")
         os.environ["PYTHONUNBUFFERED"] = "yes"
@@ -1115,21 +1290,31 @@ class NagiosProbes(CommandBase):
 
         try:
             self.nagiosProbes = [
-                str(pv).strip() for pv in self.pp.pilotJSON["Setups"][self.pp.setup]["NagiosProbes"].split(",")
+                str(pv).strip()
+                for pv in self.pp.pilotJSON["Setups"][self.pp.setup][
+                    "NagiosProbes"
+                ].split(",")
             ]
         except KeyError:
             try:
                 self.nagiosProbes = [
-                    str(pv).strip() for pv in self.pp.pilotJSON["Setups"]["Defaults"]["NagiosProbes"].split(",")
+                    str(pv).strip()
+                    for pv in self.pp.pilotJSON["Setups"]["Defaults"][
+                        "NagiosProbes"
+                    ].split(",")
                 ]
             except KeyError:
                 pass
 
         try:
-            self.nagiosPutURL = str(self.pp.pilotJSON["Setups"][self.pp.setup]["NagiosPutURL"])
+            self.nagiosPutURL = str(
+                self.pp.pilotJSON["Setups"][self.pp.setup]["NagiosPutURL"]
+            )
         except KeyError:
             try:
-                self.nagiosPutURL = str(self.pp.pilotJSON["Setups"]["Defaults"]["NagiosPutURL"])
+                self.nagiosPutURL = str(
+                    self.pp.pilotJSON["Setups"]["Defaults"]["NagiosPutURL"]
+                )
             except KeyError:
                 pass
 
@@ -1162,7 +1347,9 @@ class NagiosProbes(CommandBase):
                 retStatus = "warning"
             else:
                 # retCode could be 2 (error) or 3 (unknown) or something we haven't thought of
-                self.log.error("Return code = %d: %s" % (retCode, str(output).split("\n", 1)[0]))
+                self.log.error(
+                    "Return code = %d: %s" % (retCode, str(output).split("\n", 1)[0])
+                )
                 retStatus = "error"
 
             # TODO: Do something with the retStatus (for example: log it?)
@@ -1173,9 +1360,18 @@ class NagiosProbes(CommandBase):
             if self.nagiosPutURL:
                 # Alternate logging of results to HTTPS PUT service too
                 hostPort = self.nagiosPutURL.split("/")[2]
-                path = "/" + "/".join(self.nagiosPutURL.split("/")[3:]) + self.pp.ceName + "/" + probeCmd
+                path = (
+                    "/"
+                    + "/".join(self.nagiosPutURL.split("/")[3:])
+                    + self.pp.ceName
+                    + "/"
+                    + probeCmd
+                )
 
-                self.log.info("Putting %s Nagios output to https://%s%s" % (probeCmd, hostPort, path))
+                self.log.info(
+                    "Putting %s Nagios output to https://%s%s"
+                    % (probeCmd, hostPort, path)
+                )
 
                 try:
                     connection = HTTPSConnection(
@@ -1185,21 +1381,29 @@ class NagiosProbes(CommandBase):
                         cert_file=os.environ["X509_USER_PROXY"],
                     )
 
-                    connection.request("PUT", path, str(retCode) + " " + str(int(time.time())) + "\n" + output)
+                    connection.request(
+                        "PUT",
+                        path,
+                        str(retCode) + " " + str(int(time.time())) + "\n" + output,
+                    )
 
                 except Exception as e:
-                    self.log.error("PUT of %s Nagios output fails with %s" % (probeCmd, str(e)))
+                    self.log.error(
+                        "PUT of %s Nagios output fails with %s" % (probeCmd, str(e))
+                    )
 
                 else:
                     result = connection.getresponse()
 
                     if int(result.status / 100) == 2:
                         self.log.info(
-                            "PUT of %s Nagios output succeeds with %d %s" % (probeCmd, result.status, result.reason)
+                            "PUT of %s Nagios output succeeds with %d %s"
+                            % (probeCmd, result.status, result.reason)
                         )
                     else:
                         self.log.error(
-                            "PUT of %s Nagios output fails with %d %s" % (probeCmd, result.status, result.reason)
+                            "PUT of %s Nagios output fails with %d %s"
+                            % (probeCmd, result.status, result.reason)
                         )
 
     @logFinalizer

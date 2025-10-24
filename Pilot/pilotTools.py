@@ -39,7 +39,9 @@ def parseVersion(releaseVersion):
 
     :param str releaseVersion: The software version to use
     """
-    VERSION_PATTERN = re.compile(r"^(?:v)?(\d+)[r\.](\d+)(?:[p\.](\d+))?(?:(?:-pre|a)?(\d+))?$")
+    VERSION_PATTERN = re.compile(
+        r"^(?:v)?(\d+)[r\.](\d+)(?:[p\.](\d+))?(?:(?:-pre|a)?(\d+))?$"
+    )
 
     match = VERSION_PATTERN.match(releaseVersion)
     # If the regex fails just return the original version
@@ -129,11 +131,17 @@ def retrieveUrlTimeout(url, fileName, log, timeout=0):
                 signal.alarm(0)
             return False
     except URLError:
-        log.error('Timeout after %s seconds on transfer request for "%s"' % (str(timeout), url))
+        log.error(
+            'Timeout after %s seconds on transfer request for "%s"'
+            % (str(timeout), url)
+        )
         return False
     except Exception as x:
         if x == "Timeout":
-            log.error('Timeout after %s seconds on transfer request for "%s"' % (str(timeout), url))
+            log.error(
+                'Timeout after %s seconds on transfer request for "%s"'
+                % (str(timeout), url)
+            )
         if timeout:
             signal.alarm(0)
         raise x
@@ -215,7 +223,9 @@ def getSubmitterInfo(ceName):
     if "SGE_TASK_ID" in os.environ:
         batchSystemType = "SGE"
         batchSystemJobID = os.environ["JOB_ID"]
-        batchSystemParameters["BinaryPath"] = os.environ.get("SGE_BINARY_PATH", "Unknown")
+        batchSystemParameters["BinaryPath"] = os.environ.get(
+            "SGE_BINARY_PATH", "Unknown"
+        )
         batchSystemParameters["Queue"] = os.environ.get("QUEUE", "Unknown")
 
         flavour = "SSH%s" % batchSystemType
@@ -248,7 +258,12 @@ def getSubmitterInfo(ceName):
         batchSystemParameters["InfoPath"] = os.environ["_CONDOR_JOB_AD"]
 
         flavour = "SSH%s" % batchSystemType
-        pilotReference = "sshcondor://" + ceName + "/" + os.environ.get("CONDOR_JOBID", pilotReference)
+        pilotReference = (
+            "sshcondor://"
+            + ceName
+            + "/"
+            + os.environ.get("CONDOR_JOBID", pilotReference)
+        )
 
     # # Local/SSH
 
@@ -266,7 +281,12 @@ def getSubmitterInfo(ceName):
     if "SSHBATCH_JOBID" in os.environ and "SSH_NODE_HOST" in os.environ:
         flavour = "SSHBATCH"
         pilotReference = (
-            "sshbatchhost://" + ceName + "/" + os.environ["SSH_NODE_HOST"] + "/" + os.environ["SSHBATCH_JOBID"]
+            "sshbatchhost://"
+            + ceName
+            + "/"
+            + os.environ["SSH_NODE_HOST"]
+            + "/"
+            + os.environ["SSHBATCH_JOBID"]
         )
 
     # # CEs
@@ -289,7 +309,11 @@ def getSubmitterInfo(ceName):
     return (
         flavour,
         pilotReference,
-        {"Type": batchSystemType, "JobID": batchSystemJobID, "Parameters": batchSystemParameters},
+        {
+            "Type": batchSystemType,
+            "JobID": batchSystemJobID,
+            "Parameters": batchSystemParameters,
+        },
     )
 
 
@@ -299,7 +323,9 @@ def getFlavour(ceName):
     Please use getSubmitterInfo instead.
     """
     warnings.warn(
-        "getFlavour() is deprecated. Please use getSubmitterInfo() instead.", category=DeprecationWarning, stacklevel=2
+        "getFlavour() is deprecated. Please use getSubmitterInfo() instead.",
+        category=DeprecationWarning,
+        stacklevel=2,
     )
     flavour, pilotReference, _ = getSubmitterInfo(ceName)
     return flavour, pilotReference
@@ -328,7 +354,9 @@ class ObjectLoader(object):
             if rootModule:
                 impName = "%s.%s" % (rootModule, impName)
             self.log.debug("Trying to load %s" % impName)
-            module, parentPath = self.__recurseImport(impName, hideExceptions=hideExceptions)
+            module, parentPath = self.__recurseImport(
+                impName, hideExceptions=hideExceptions
+            )
             # Error. Something cannot be imported. Return error
             if module is None:
                 return None, None
@@ -350,13 +378,18 @@ class ObjectLoader(object):
         except ImportError as excp:
             if str(excp).find("No module named %s" % modName[0]) == 0:
                 return None, None
-            errMsg = "Can't load %s in %s" % (".".join(modName), parentModule.__path__[0])
+            errMsg = "Can't load %s in %s" % (
+                ".".join(modName),
+                parentModule.__path__[0],
+            )
             if not hideExceptions:
                 self.log.exception(errMsg)
             return None, None
         if len(modName) == 1:
             return impModule, parentModule.__path__[0]
-        return self.__recurseImport(modName[1:], impModule, hideExceptions=hideExceptions)
+        return self.__recurseImport(
+            modName[1:], impModule, hideExceptions=hideExceptions
+        )
 
     def loadObject(self, package, moduleName, command):
         """Load an object from inside a module"""
@@ -424,7 +457,9 @@ class Logger(object):
             with open(self.out, "a") as outputFile:
                 for _line in str(msg).split("\n"):
                     if header:
-                        outLine = self.messageTemplate.format(level=level, message=_line)
+                        outLine = self.messageTemplate.format(
+                            level=level, message=_line
+                        )
                         print(outLine)
                         if self.out:
                             outputFile.write(outLine + "\n")
@@ -480,7 +515,9 @@ class RemoteLogger(Logger):
         self.wnVO = wnVO
         self.isPilotLoggerOn = isPilotLoggerOn
         sendToURL = partial(sendMessage, url, pilotUUID, wnVO, "sendMessage")
-        self.buffer = FixedSizeBuffer(sendToURL, bufsize=bufsize, autoflush=flushInterval)
+        self.buffer = FixedSizeBuffer(
+            sendToURL, bufsize=bufsize, autoflush=flushInterval
+        )
 
     def debug(self, msg, header=True, _sendPilotLog=False):
         # TODO: Send pilot log remotely?
@@ -651,7 +688,9 @@ def sendMessage(url, pilotUUID, wnVO, method, rawMessage):
         context.load_cert_chain(cert)  # this is a proxy
         raw_data = {"method": method, "args": message}
     except IsADirectoryError:  # assuming it'a dir containing cert and key
-        context.load_cert_chain(os.path.join(cert, "hostcert.pem"), os.path.join(cert, "hostkey.pem"))
+        context.load_cert_chain(
+            os.path.join(cert, "hostcert.pem"), os.path.join(cert, "hostkey.pem")
+        )
         raw_data = {"method": method, "args": message, "extraCredentials": '"hosts"'}
 
     data = urlencode(raw_data).encode("utf-8")  # encode to bytes
@@ -707,7 +746,12 @@ class CommandBase(object):
 
         self.log.info("Executing command %s" % cmd)
         _p = subprocess.Popen(
-            cmd, shell=True, env=environDict, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=False
+            cmd,
+            shell=True,
+            env=environDict,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            close_fds=False,
         )
 
         # Use non-blocking I/O on the process pipes
@@ -779,7 +823,12 @@ class CommandBase(object):
         with open(logFile, "a+", 0) as fpLogFile:
             try:
                 _p = subprocess.Popen(
-                    "%s" % cmd, shell=True, env=environDict, close_fds=False, stdout=fpLogFile, stderr=fpLogFile
+                    "%s" % cmd,
+                    shell=True,
+                    env=environDict,
+                    close_fds=False,
+                    stdout=fpLogFile,
+                    stderr=fpLogFile,
                 )
 
                 # return code
@@ -890,7 +939,9 @@ class PilotParams(object):
 
         # Set number of allocatable processors from MJF if available
         try:
-            self.pilotProcessors = int(urlopen(os.path.join(os.environ["JOBFEATURES"], "allocated_cpu")).read())
+            self.pilotProcessors = int(
+                urlopen(os.path.join(os.environ["JOBFEATURES"], "allocated_cpu")).read()
+            )
         except Exception:
             self.pilotProcessors = 1
 
@@ -907,7 +958,11 @@ class PilotParams(object):
             ("l:", "project=", "Project to install"),
             ("n:", "name=", "Set <Site> as Site Name"),
             ("o:", "option=", "Option=value to add"),
-            ("m:", "maxNumberOfProcessors=", "specify a max number of processors to use by the payload inside a pilot"),
+            (
+                "m:",
+                "maxNumberOfProcessors=",
+                "specify a max number of processors to use by the payload inside a pilot",
+            ),
             ("", "modules=", "for installing non-released code"),
             (
                 "",
@@ -930,7 +985,11 @@ class PilotParams(object):
             ("K:", "certLocation=", "Specify server certificate location"),
             ("M:", "MaxCycles=", "Maximum Number of JobAgent cycles to run"),
             ("", "PollingTime=", "JobAgent execution frequency"),
-            ("", "StopOnApplicationFailure=", "Stop Job Agent when encounter an application failure"),
+            (
+                "",
+                "StopOnApplicationFailure=",
+                "Stop Job Agent when encounter an application failure",
+            ),
             ("", "StopAfterFailedMatches=", "Stop Job Agent after N failed matches"),
             ("N:", "Name=", "CE Name"),
             ("O:", "OwnerDN=", "Pilot OwnerDN (for private pilots)"),
@@ -940,12 +999,20 @@ class PilotParams(object):
             ("R:", "reference=", "Use this pilot reference"),
             ("S:", "setup=", "DIRAC Setup to use"),
             ("T:", "CPUTime=", "Requested CPU Time"),
-            ("W:", "gateway=", "Configure <gateway> as DIRAC Gateway during installation"),
+            (
+                "W:",
+                "gateway=",
+                "Configure <gateway> as DIRAC Gateway during installation",
+            ),
             ("X:", "commands=", "Pilot commands to execute"),
             ("Z:", "commandOptions=", "Options parsed by command modules"),
             ("", "pilotUUID=", "pilot UUID"),
             ("", "preinstalledEnv=", "preinstalled pilot environment script location"),
-            ("", "preinstalledEnvPrefix=", "preinstalled pilot environment area prefix"),
+            (
+                "",
+                "preinstalledEnvPrefix=",
+                "preinstalled pilot environment area prefix",
+            ),
             ("", "architectureScript=", "architecture script to use"),
             ("", "CVMFS_locations=", "comma-separated list of CVMS locations"),
         )
@@ -1021,7 +1088,8 @@ class PilotParams(object):
             # If so, just return
         if envName in os.environ and safe_listdir(os.environ[envName]):
             self.log.debug(
-                "%s is set in the host environment as %s, aligning installEnv to it" % (envName, os.environ[envName])
+                "%s is set in the host environment as %s, aligning installEnv to it"
+                % (envName, os.environ[envName])
             )
         else:
             # None of the candidates exists, stop the program.
@@ -1032,7 +1100,9 @@ class PilotParams(object):
         """Parses and interpret options on the command line: first pass (essential things)"""
 
         self.optList, __args__ = getopt.getopt(
-            sys.argv[1:], "".join([opt[0] for opt in self.cmdOpts]), [opt[1] for opt in self.cmdOpts]
+            sys.argv[1:],
+            "".join([opt[0] for opt in self.cmdOpts]),
+            [opt[1] for opt in self.cmdOpts],
         )
         self.log.debug("Options list: %s" % self.optList)
         for o, v in self.optList:
@@ -1058,7 +1128,9 @@ class PilotParams(object):
         """
 
         self.optList, __args__ = getopt.getopt(
-            sys.argv[1:], "".join([opt[0] for opt in self.cmdOpts]), [opt[1] for opt in self.cmdOpts]
+            sys.argv[1:],
+            "".join([opt[0] for opt in self.cmdOpts]),
+            [opt[1] for opt in self.cmdOpts],
         )
         for o, v in self.optList:
             if o == "-E" or o == "--commandExtensions":
@@ -1067,7 +1139,9 @@ class PilotParams(object):
                 self.commands = v.split(",")
             elif o == "-Z" or o == "--commandOptions":
                 for i in v.split(","):
-                    self.commandOptions[i.split("=", 1)[0].strip()] = i.split("=", 1)[1].strip()
+                    self.commandOptions[i.split("=", 1)[0].strip()] = i.split("=", 1)[
+                        1
+                    ].strip()
             elif o == "-e" or o == "--extraPackages":
                 self.extensions = v.split(",")
             elif o == "-n" or o == "--name":
@@ -1186,27 +1260,40 @@ class PilotParams(object):
             self.pilotLogging = pilotLogging.upper() == "TRUE"
         self.loggerURL = pilotOptions.get("RemoteLoggerURL")
         # logger buffer flush interval in seconds.
-        self.loggerTimerInterval = int(pilotOptions.get("RemoteLoggerTimerInterval", self.loggerTimerInterval))
+        self.loggerTimerInterval = int(
+            pilotOptions.get("RemoteLoggerTimerInterval", self.loggerTimerInterval)
+        )
         # logger buffer size in lines:
-        self.loggerBufsize = max(1, int(pilotOptions.get("RemoteLoggerBufsize", self.loggerBufsize)))
+        self.loggerBufsize = max(
+            1, int(pilotOptions.get("RemoteLoggerBufsize", self.loggerBufsize))
+        )
         # logger CE white list
         loggerCEsWhiteList = pilotOptions.get("RemoteLoggerCEsWhiteList")
         # restrict remote logging to whitelisted CEs ([] or None => no restriction)
         self.log.debug("JSON: Remote logging CE white list: %s" % loggerCEsWhiteList)
         if loggerCEsWhiteList is not None:
             if not isinstance(loggerCEsWhiteList, list):
-                loggerCEsWhiteList = [elem.strip() for elem in loggerCEsWhiteList.split(",")]
+                loggerCEsWhiteList = [
+                    elem.strip() for elem in loggerCEsWhiteList.split(",")
+                ]
             if self.ceName not in loggerCEsWhiteList:
                 self.pilotLogging = False
-                self.log.debug("JSON: Remote logging disabled for this CE: %s" % self.ceName)
+                self.log.debug(
+                    "JSON: Remote logging disabled for this CE: %s" % self.ceName
+                )
         pilotLogLevel = pilotOptions.get("PilotLogLevel", "INFO")
         if pilotLogLevel.lower() == "debug":
             self.debugFlag = True
         self.log.debug("JSON: Remote logging: %s" % self.pilotLogging)
         self.log.debug("JSON: Remote logging URL: %s" % self.loggerURL)
-        self.log.debug("JSON: Remote logging buffer flush interval in sec.(0: disabled): %s" % self.loggerTimerInterval)
+        self.log.debug(
+            "JSON: Remote logging buffer flush interval in sec.(0: disabled): %s"
+            % self.loggerTimerInterval
+        )
         self.log.debug("JSON: Remote/local logging debug flag: %s" % self.debugFlag)
-        self.log.debug("JSON: Remote logging buffer size (lines): %s" % self.loggerBufsize)
+        self.log.debug(
+            "JSON: Remote logging buffer size (lines): %s" % self.loggerBufsize
+        )
 
         # CE type if present, then Defaults, otherwise as defined in the code:
         if "Commands" in pilotOptions:
@@ -1218,7 +1305,9 @@ class PilotParams(object):
                     else:
                         # TODO: This is a workaround until the pilot JSON syncroniser is fixed
                         self.commands = [elem.strip() for elem in commands.split(",")]
-                    self.log.debug("Selecting commands from JSON for Grid CE type %s" % key)
+                    self.log.debug(
+                        "Selecting commands from JSON for Grid CE type %s" % key
+                    )
                     break
         else:
             key = "CodeDefaults"
@@ -1228,10 +1317,14 @@ class PilotParams(object):
         # Command extensions for the commands above:
         commandExtOptions = pilotOptions.get("CommandExtensions")
         if commandExtOptions:
-            self.commandExtensions = [elem.strip() for elem in commandExtOptions.split(",")]
+            self.commandExtensions = [
+                elem.strip() for elem in commandExtOptions.split(",")
+            ]
         # Configuration server (the synchroniser looks into gConfig.getServersList(), as before
         # the generic one (a list):
-        self.configServer = ",".join([str(pv).strip() for pv in self.pilotJSON["ConfigurationServers"]])
+        self.configServer = ",".join(
+            [str(pv).strip() for pv in self.pilotJSON["ConfigurationServers"]]
+        )
 
         # version(a comma separated values in a string). We take the first one. (the default value defined in the code)
         dVersion = pilotOptions.get("Version", self.releaseVersion)
@@ -1241,13 +1334,19 @@ class PilotParams(object):
         else:
             self.log.warn("Could not find a version in the JSON file configuration")
 
-        self.log.debug("Version: %s -> (release) %s" % (str(dVersion), self.releaseVersion))
+        self.log.debug(
+            "Version: %s -> (release) %s" % (str(dVersion), self.releaseVersion)
+        )
 
-        self.releaseProject = pilotOptions.get("Project", self.releaseProject)  # default from the code.
+        self.releaseProject = pilotOptions.get(
+            "Project", self.releaseProject
+        )  # default from the code.
         self.log.debug("Release project: %s" % self.releaseProject)
 
         if "CVMFS_locations" in pilotOptions:
-            self.CVMFS_locations = pilotOptions["CVMFS_locations"].replace(" ", "").split(",")
+            self.CVMFS_locations = (
+                pilotOptions["CVMFS_locations"].replace(" ", "").split(",")
+            )
         self.log.debug("CVMFS locations: %s" % self.CVMFS_locations)
 
     def getPilotOptionsDict(self):
@@ -1285,7 +1384,10 @@ class PilotParams(object):
                 with open(cert, "rb") as fp:
                     return getVO(fp.read())
             except IOError as err:
-                self.log.error("Could not read a proxy, setting vo to 'unknown': %s" % os.strerror(err.errno))
+                self.log.error(
+                    "Could not read a proxy, setting vo to 'unknown': %s"
+                    % os.strerror(err.errno)
+                )
         else:
             self.log.error("Could not locate a proxy via X509_USER_PROXY")
 
@@ -1382,46 +1484,78 @@ class PilotParams(object):
         # Commands first
         # FIXME: pilotSynchronizer() should publish these as comma-separated lists. We are ready for that.
         try:
-            if isinstance(self.pilotJSON["Setups"][self.setup]["Commands"][self.gridCEType], str):
+            if isinstance(
+                self.pilotJSON["Setups"][self.setup]["Commands"][self.gridCEType], str
+            ):
                 self.commands = [
                     str(pv).strip()
-                    for pv in self.pilotJSON["Setups"][self.setup]["Commands"][self.gridCEType].split(",")
+                    for pv in self.pilotJSON["Setups"][self.setup]["Commands"][
+                        self.gridCEType
+                    ].split(",")
                 ]
             else:
                 self.commands = [
-                    str(pv).strip() for pv in self.pilotJSON["Setups"][self.setup]["Commands"][self.gridCEType]
+                    str(pv).strip()
+                    for pv in self.pilotJSON["Setups"][self.setup]["Commands"][
+                        self.gridCEType
+                    ]
                 ]
         except KeyError:
             try:
-                if isinstance(self.pilotJSON["Setups"][self.setup]["Commands"]["Defaults"], str):
+                if isinstance(
+                    self.pilotJSON["Setups"][self.setup]["Commands"]["Defaults"], str
+                ):
                     self.commands = [
                         str(pv).strip()
-                        for pv in self.pilotJSON["Setups"][self.setup]["Commands"]["Defaults"].split(",")
+                        for pv in self.pilotJSON["Setups"][self.setup]["Commands"][
+                            "Defaults"
+                        ].split(",")
                     ]
                 else:
                     self.commands = [
-                        str(pv).strip() for pv in self.pilotJSON["Setups"][self.setup]["Commands"]["Defaults"]
+                        str(pv).strip()
+                        for pv in self.pilotJSON["Setups"][self.setup]["Commands"][
+                            "Defaults"
+                        ]
                     ]
             except KeyError:
                 try:
-                    if isinstance(self.pilotJSON["Setups"]["Defaults"]["Commands"][self.gridCEType], str):
+                    if isinstance(
+                        self.pilotJSON["Setups"]["Defaults"]["Commands"][
+                            self.gridCEType
+                        ],
+                        str,
+                    ):
                         self.commands = [
                             str(pv).strip()
-                            for pv in self.pilotJSON["Setups"]["Defaults"]["Commands"][self.gridCEType].split(",")
+                            for pv in self.pilotJSON["Setups"]["Defaults"]["Commands"][
+                                self.gridCEType
+                            ].split(",")
                         ]
                     else:
                         self.commands = [
-                            str(pv).strip() for pv in self.pilotJSON["Setups"]["Defaults"]["Commands"][self.gridCEType]
+                            str(pv).strip()
+                            for pv in self.pilotJSON["Setups"]["Defaults"]["Commands"][
+                                self.gridCEType
+                            ]
                         ]
                 except KeyError:
                     try:
-                        if isinstance(self.pilotJSON["Defaults"]["Commands"]["Defaults"], str):
+                        if isinstance(
+                            self.pilotJSON["Defaults"]["Commands"]["Defaults"], str
+                        ):
                             self.commands = [
-                                str(pv).strip() for pv in self.pilotJSON["Defaults"]["Commands"]["Defaults"].split(",")
+                                str(pv).strip()
+                                for pv in self.pilotJSON["Defaults"]["Commands"][
+                                    "Defaults"
+                                ].split(",")
                             ]
                         else:
                             self.commands = [
-                                str(pv).strip() for pv in self.pilotJSON["Defaults"]["Commands"]["Defaults"]
+                                str(pv).strip()
+                                for pv in self.pilotJSON["Defaults"]["Commands"][
+                                    "Defaults"
+                                ]
                             ]
                     except KeyError:
                         pass
@@ -1434,11 +1568,15 @@ class PilotParams(object):
                 self.pilotJSON["Setups"][self.setup]["CommandExtensions"], str
             ):  # In the specific setup?
                 self.commandExtensions = [
-                    str(pv).strip() for pv in self.pilotJSON["Setups"][self.setup]["CommandExtensions"].split(",")
+                    str(pv).strip()
+                    for pv in self.pilotJSON["Setups"][self.setup][
+                        "CommandExtensions"
+                    ].split(",")
                 ]
             else:
                 self.commandExtensions = [
-                    str(pv).strip() for pv in self.pilotJSON["Setups"][self.setup]["CommandExtensions"]
+                    str(pv).strip()
+                    for pv in self.pilotJSON["Setups"][self.setup]["CommandExtensions"]
                 ]
         except KeyError:
             try:
@@ -1446,11 +1584,17 @@ class PilotParams(object):
                     self.pilotJSON["Setups"]["Defaults"]["CommandExtensions"], str
                 ):  # Or in the defaults section?
                     self.commandExtensions = [
-                        str(pv).strip() for pv in self.pilotJSON["Setups"]["Defaults"]["CommandExtensions"].split(",")
+                        str(pv).strip()
+                        for pv in self.pilotJSON["Setups"]["Defaults"][
+                            "CommandExtensions"
+                        ].split(",")
                     ]
                 else:
                     self.commandExtensions = [
-                        str(pv).strip() for pv in self.pilotJSON["Setups"]["Defaults"]["CommandExtensions"]
+                        str(pv).strip()
+                        for pv in self.pilotJSON["Setups"]["Defaults"][
+                            "CommandExtensions"
+                        ]
                     ]
             except KeyError:
                 pass
@@ -1463,10 +1607,15 @@ class PilotParams(object):
                 self.pilotJSON["ConfigurationServers"], str
             ):  # Generic, there may also be setup-specific ones
                 self.configServer = ",".join(
-                    [str(pv).strip() for pv in self.pilotJSON["ConfigurationServers"].split(",")]
+                    [
+                        str(pv).strip()
+                        for pv in self.pilotJSON["ConfigurationServers"].split(",")
+                    ]
                 )
             else:  # it's a list, we suppose
-                self.configServer = ",".join([str(pv).strip() for pv in self.pilotJSON["ConfigurationServers"]])
+                self.configServer = ",".join(
+                    [str(pv).strip() for pv in self.pilotJSON["ConfigurationServers"]]
+                )
         except KeyError:
             pass
         try:  # now trying to see if there is setup-specific ones
@@ -1474,11 +1623,21 @@ class PilotParams(object):
                 self.pilotJSON["Setups"][self.setup]["ConfigurationServer"], str
             ):  # In the specific setup?
                 self.configServer = ",".join(
-                    [str(pv).strip() for pv in self.pilotJSON["Setups"][self.setup]["ConfigurationServer"].split(",")]
+                    [
+                        str(pv).strip()
+                        for pv in self.pilotJSON["Setups"][self.setup][
+                            "ConfigurationServer"
+                        ].split(",")
+                    ]
                 )
             else:  # it's a list, we suppose
                 self.configServer = ",".join(
-                    [str(pv).strip() for pv in self.pilotJSON["Setups"][self.setup]["ConfigurationServer"]]
+                    [
+                        str(pv).strip()
+                        for pv in self.pilotJSON["Setups"][self.setup][
+                            "ConfigurationServer"
+                        ]
+                    ]
                 )
         except KeyError:  # and if it doesn't exist
             try:
@@ -1488,12 +1647,19 @@ class PilotParams(object):
                     self.configServer = ",".join(
                         [
                             str(pv).strip()
-                            for pv in self.pilotJSON["Setups"]["Defaults"]["ConfigurationServer"].split(",")
+                            for pv in self.pilotJSON["Setups"]["Defaults"][
+                                "ConfigurationServer"
+                            ].split(",")
                         ]
                     )
                 else:  # it's a list, we suppose
                     self.configServer = ",".join(
-                        [str(pv).strip() for pv in self.pilotJSON["Setups"]["Defaults"]["ConfigurationServer"]]
+                        [
+                            str(pv).strip()
+                            for pv in self.pilotJSON["Setups"]["Defaults"][
+                                "ConfigurationServer"
+                            ]
+                        ]
                     )
             except KeyError:
                 pass
@@ -1503,10 +1669,18 @@ class PilotParams(object):
         # There may be a list of versions specified (in a string, comma separated). We just want the first one.
         dVersion = None
         try:
-            dVersion = [dv.strip() for dv in self.pilotJSON["Setups"][self.setup]["Version"].split(",", 1)]
+            dVersion = [
+                dv.strip()
+                for dv in self.pilotJSON["Setups"][self.setup]["Version"].split(",", 1)
+            ]
         except KeyError:
             try:
-                dVersion = [dv.strip() for dv in self.pilotJSON["Setups"]["Defaults"]["Version"].split(",", 1)]
+                dVersion = [
+                    dv.strip()
+                    for dv in self.pilotJSON["Setups"]["Defaults"]["Version"].split(
+                        ",", 1
+                    )
+                ]
             except KeyError:
                 self.log.warn("Could not find a version in the JSON file configuration")
         if dVersion is not None:
@@ -1517,7 +1691,9 @@ class PilotParams(object):
             self.releaseProject = str(self.pilotJSON["Setups"][self.setup]["Project"])
         except KeyError:
             try:
-                self.releaseProject = str(self.pilotJSON["Setups"]["Defaults"]["Project"])
+                self.releaseProject = str(
+                    self.pilotJSON["Setups"]["Defaults"]["Project"]
+                )
             except KeyError:
                 pass
         self.log.debug("Release project: %s" % self.releaseProject)
@@ -1537,7 +1713,9 @@ class PilotParams(object):
             try:
                 if not self.gridCEType:
                     # We don't override a grid CEType given on the command line!
-                    self.gridCEType = str(self.pilotJSON["CEs"][self.ceName]["GridCEType"])
+                    self.gridCEType = str(
+                        self.pilotJSON["CEs"][self.ceName]["GridCEType"]
+                    )
             except KeyError:
                 pass
             # This LocalCEType is like 'InProcess' or 'Pool' or 'Pool/Singularity' etc.
@@ -1547,7 +1725,9 @@ class PilotParams(object):
             except KeyError:
                 pass
             try:
-                self.ceType = str(self.pilotJSON["CEs"][self.ceName][self.queueName]["LocalCEType"])
+                self.ceType = str(
+                    self.pilotJSON["CEs"][self.ceName][self.queueName]["LocalCEType"]
+                )
             except KeyError:
                 pass
 

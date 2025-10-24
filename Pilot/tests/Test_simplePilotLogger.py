@@ -57,7 +57,9 @@ class TestPilotParams(unittest.TestCase):
         res = PilotParams.getOptionForPaths(paths, jsonDict)
         self.assertEqual(res["RemoteLogging"], "False")
         self.assertEqual(res["UploadSE"], "UKI-LT2-IC-HEP-disk")
-        del jsonDict[vo]["Pilot"]["RemoteLogging"]  # remove a vo-specific settings, a default value is False:
+        del jsonDict[vo]["Pilot"][
+            "RemoteLogging"
+        ]  # remove a vo-specific settings, a default value is False:
         res = PilotParams.getOptionForPaths(paths, jsonDict)
         self.assertEqual(res["RemoteLogging"], "False")
 
@@ -137,7 +139,9 @@ class TestCommandBase(unittest.TestCase):
         ]
 
         for size in [1000, 1024, 1025, 2005]:
-            random_str = "".join(random.choice(string.ascii_letters + "\n") for i in range(size))
+            random_str = "".join(
+                random.choice(string.ascii_letters + "\n") for i in range(size)
+            )
             random_bytes = random_str.encode("UTF-8")
             self.stdout_mock.write(random_bytes)
             self.stdout_mock.seek(0)
@@ -157,6 +161,7 @@ class TestCommandBase(unittest.TestCase):
             self.stderr_mock.seek(0)
             self.stdout_mock.truncate()
             self.stderr_mock.truncate()
+
 
 if __name__ == "__main__":
     unittest.main()

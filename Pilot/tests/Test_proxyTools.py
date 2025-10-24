@@ -84,4 +84,3 @@ class TestProxyTools(unittest.TestCase):
         basedir = os.path.dirname(__file__)
         shutil.copy(basedir + "/certs/voms/proxy.pem", proxyFile)
         return 0
-
