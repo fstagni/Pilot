@@ -383,13 +383,18 @@ def getCommand(params, commandName):
     modules = [m + "Commands" for m in extensions + ["pilot"]]
     commandObject = None
 
-    # Look for commands in the modules in the current directory first
     for module in modules:
+        # Look for commands in the modules in the current directory first
         try:
             commandModule = import_module(module)
             commandObject = getattr(commandModule, commandName)
         except Exception:
-            pass
+            # Now look for commands as part of a package
+            try:
+                commandModule = import_module("." + module, package=os.path.basename(os.getcwd()))
+                commandObject = getattr(commandModule, commandName)
+            except Exception:
+                pass
         if commandObject:
             return commandObject(params), module
 
