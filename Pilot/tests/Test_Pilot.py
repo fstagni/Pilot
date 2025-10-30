@@ -33,7 +33,12 @@ class PilotTestCase(unittest.TestCase):
                             "Version": "v1r1, v2r2",
                         }
                     },
-                    "CEs": {"grid1.example.com": {"GridCEType": "cetype1", "Site": "site.example.com"}},
+                    "CEs": {
+                        "grid1.example.com": {
+                            "GridCEType": "cetype1",
+                            "Site": "site.example.com",
+                        }
+                    },
                     "DefaultSetup": "TestSetup",
                 },
                 fp,
@@ -69,7 +74,14 @@ class CommandsTestCase(PilotTestCase):
 
     def test_InitJSON(self):
         """Test the pilot.json and command line parsing"""
-        sys.argv[1:] = ["--Name", "grid1.example.com", "--commandOptions", "a=1,b=2", "-Z", "c=3"]
+        sys.argv[1:] = [
+            "--Name",
+            "grid1.example.com",
+            "--commandOptions",
+            "a=1,b=2",
+            "-Z",
+            "c=3",
+        ]
         pp = PilotParams()
 
         self.assertEqual(pp.commands, ["x", "y", "z"])
@@ -93,7 +105,13 @@ class CommandsTestCase(PilotTestCase):
         self.assertEqual(pp.commandOptions["b"], "2")
         self.assertEqual(pp.commandOptions["c"], "3")
 
-        sys.argv[1:] = ["--Name", "grid1.example.com", "--commandOptions=a = 1,  b=2", "-Z", " c=3"]  # spaces and '=''
+        sys.argv[1:] = [
+            "--Name",
+            "grid1.example.com",
+            "--commandOptions=a = 1,  b=2",
+            "-Z",
+            " c=3",
+        ]  # spaces and '=''
         pp = PilotParams()
 
         self.assertEqual(pp.commandOptions["a"], "1")

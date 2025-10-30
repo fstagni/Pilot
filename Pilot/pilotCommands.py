@@ -94,7 +94,13 @@ def logFinalizer(func):
             )
             self.log.buffer.flush()  # flush the buffer unconditionally (on sys.exit()).
             try:
-                sendMessage(self.log.url, self.log.pilotUUID, self.log.wnVO, "finaliseLogs", {"retCode": str(exCode)})
+                sendMessage(
+                    self.log.url,
+                    self.log.pilotUUID,
+                    self.log.wnVO,
+                    "finaliseLogs",
+                    {"retCode": str(exCode)},
+                )
             except Exception as exc:
                 self.log.error("Remote logger couldn't be finalised %s " % str(exc))
             raise
@@ -266,7 +272,11 @@ class InstallDIRAC(CommandBase):
                 version = self.pp.releaseVersion or "pro"
                 arch = platform.system() + "-" + platform.machine()
                 preinstalledEnvScript = os.path.join(
-                    CVMFS_location, self.pp.releaseProject.lower() + "dirac", version, arch, "diracosrc"
+                    CVMFS_location,
+                    self.pp.releaseProject.lower() + "dirac",
+                    version,
+                    arch,
+                    "diracosrc",
                 )
                 if os.path.isfile(preinstalledEnvScript):
                     break
@@ -385,10 +395,21 @@ class InstallDIRAC(CommandBase):
                     self.exitWithError(retCode)
         else:
             # pip install DIRAC[pilot]==version ExtensionDIRAC[pilot]==version_ext
-            if not self.releaseVersion or self.releaseVersion in ["master", "main", "integration"]:
-                cmd = "%s %sDIRAC[pilot]" % (pipInstallingPrefix, self.pp.releaseProject)
+            if not self.releaseVersion or self.releaseVersion in [
+                "master",
+                "main",
+                "integration",
+            ]:
+                cmd = "%s %sDIRAC[pilot]" % (
+                    pipInstallingPrefix,
+                    self.pp.releaseProject,
+                )
             else:
-                cmd = "%s %sDIRAC[pilot]==%s" % (pipInstallingPrefix, self.pp.releaseProject, self.releaseVersion)
+                cmd = "%s %sDIRAC[pilot]==%s" % (
+                    pipInstallingPrefix,
+                    self.pp.releaseProject,
+                    self.releaseVersion,
+                )
             retCode, output = self.executeAndGetOutput(cmd, self.pp.installEnv)
             if retCode:
                 self.log.error("Could not pip install %s [ERROR %d]" % (self.releaseVersion, retCode))
@@ -834,11 +855,14 @@ class ConfigureArchitecture(CommandBase):
         archScript = self.pp.architectureScript
         if self.pp.architectureScript.split(" ")[0] == "dirac-apptainer-exec":
             archScript = " ".join(self.pp.architectureScript.split(" ")[1:])
-        
+
         architectureCmd = "%s %s -ddd" % (archScript, " ".join(cfg))
 
         if self.pp.architectureScript.split(" ")[0] == "dirac-apptainer-exec":
-            architectureCmd = "dirac-apptainer-exec '%s' %s" % (architectureCmd, " ".join(cfg))
+            architectureCmd = "dirac-apptainer-exec '%s' %s" % (
+                architectureCmd,
+                " ".join(cfg),
+            )
 
         retCode, localArchitecture = self.executeAndGetOutput(architectureCmd, self.pp.installEnv)
         if retCode:
@@ -872,10 +896,12 @@ class ConfigureArchitecture(CommandBase):
 
         return localArchitecture
 
+
 class ConfigureArchitectureWithoutCLI(CommandBase):
     """This command determines the platform.
     Separated from the ConfigureDIRAC command for easier extensibility.
     """
+
     def getPlatformString(self):
         # Modified to return our desired platform string, R. Graciani
         platformTuple = (platform.system(), platform.machine())
@@ -902,7 +928,6 @@ class ConfigureArchitectureWithoutCLI(CommandBase):
         except Exception as e:
             self.log.error("Configuration error [ERROR %s]" % str(e))
             self.exitWithError(1)
-
 
         cfg = ["-FDMH"]  # force update, skip CA checks, skip CA download, skip VOMS
         if self.pp.useServerCertificate:
@@ -945,7 +970,11 @@ class ConfigureCPURequirements(CommandBase):
         if self.pp.useServerCertificate:
             configFileArg = "-o /DIRAC/Security/UseServerCertificate=yes"
         if self.pp.localConfigFile:
-            configFileArg = "%s -R %s --cfg %s" % (configFileArg, self.pp.localConfigFile, self.pp.localConfigFile)
+            configFileArg = "%s -R %s --cfg %s" % (
+                configFileArg,
+                self.pp.localConfigFile,
+                self.pp.localConfigFile,
+            )
         retCode, cpuNormalizationFactorOutput = self.executeAndGetOutput(
             "dirac-wms-cpu-normalization -U %s -d" % configFileArg, self.pp.installEnv
         )
@@ -1211,7 +1240,11 @@ class NagiosProbes(CommandBase):
                         cert_file=os.environ["X509_USER_PROXY"],
                     )
 
-                    connection.request("PUT", path, str(retCode) + " " + str(int(time.time())) + "\n" + output)
+                    connection.request(
+                        "PUT",
+                        path,
+                        str(retCode) + " " + str(int(time.time())) + "\n" + output,
+                    )
 
                 except Exception as e:
                     self.log.error("PUT of %s Nagios output fails with %s" % (probeCmd, str(e)))

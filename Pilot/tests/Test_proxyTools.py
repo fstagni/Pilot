@@ -124,7 +124,16 @@ class TestProxyTools(unittest.TestCase):
         opt = (
             '--cert %s --key %s -rfc -fqan "/fakevo/Role=user/Capability=NULL" -uri %s -voms %s -hostcert %s'
             "  -hostkey %s  -certdir %s -out %s"
-            % (usercert, userkey, serverURI, vo, hostcert, hostkey, CACertDir, proxyfile)
+            % (
+                usercert,
+                userkey,
+                serverURI,
+                vo,
+                hostcert,
+                hostkey,
+                CACertDir,
+                proxyfile,
+            )
         )
         proc = subprocess.Popen(
             shlex.split("voms-proxy-fake " + opt),

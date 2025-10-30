@@ -348,7 +348,11 @@ def getSubmitterInfo(ceName):
     return (
         flavour,
         pilotReference,
-        {"Type": batchSystemType, "JobID": batchSystemJobID, "Parameters": batchSystemParameters},
+        {
+            "Type": batchSystemType,
+            "JobID": batchSystemJobID,
+            "Parameters": batchSystemParameters,
+        },
     )
 
 
@@ -358,7 +362,9 @@ def getFlavour(ceName):
     Please use getSubmitterInfo instead.
     """
     warnings.warn(
-        "getFlavour() is deprecated. Please use getSubmitterInfo() instead.", category=DeprecationWarning, stacklevel=2
+        "getFlavour() is deprecated. Please use getSubmitterInfo() instead.",
+        category=DeprecationWarning,
+        stacklevel=2,
     )
     flavour, pilotReference, _ = getSubmitterInfo(ceName)
     return flavour, pilotReference
@@ -409,7 +415,10 @@ class ObjectLoader(object):
         except ImportError as excp:
             if str(excp).find("No module named %s" % modName[0]) == 0:
                 return None, None
-            errMsg = "Can't load %s in %s" % (".".join(modName), parentModule.__path__[0])
+            errMsg = "Can't load %s in %s" % (
+                ".".join(modName),
+                parentModule.__path__[0],
+            )
             if not hideExceptions:
                 self.log.exception(errMsg)
             return None, None
@@ -770,7 +779,12 @@ class CommandBase(object):
 
         self.log.info("Executing command %s" % cmd)
         _p = subprocess.Popen(
-            cmd, shell=True, env=environDict, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=False
+            cmd,
+            shell=True,
+            env=environDict,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            close_fds=False,
         )
 
         # Use non-blocking I/O on the process pipes
@@ -793,7 +807,7 @@ class CommandBase(object):
                         outChunk = outChunk.decode("utf-8")
                     # Strip unicode replacement characters
                     # Ensure correct type conversion in Python 2
-                    outChunk = str(outChunk.replace(u"\ufffd", ""))
+                    outChunk = str(outChunk.replace("\ufffd", ""))
                     # Avoid potential str() issues in Py2
                     outChunk = unicode(outChunk)  # pylint: disable=undefined-variable
                 else:
@@ -852,7 +866,12 @@ class CommandBase(object):
         with open(logFile, "a+", 0) as fpLogFile:
             try:
                 _p = subprocess.Popen(
-                    "%s" % cmd, shell=True, env=environDict, close_fds=False, stdout=fpLogFile, stderr=fpLogFile
+                    "%s" % cmd,
+                    shell=True,
+                    env=environDict,
+                    close_fds=False,
+                    stdout=fpLogFile,
+                    stderr=fpLogFile,
                 )
 
                 # return code
@@ -980,7 +999,11 @@ class PilotParams(object):
             ("l:", "project=", "Project to install"),
             ("n:", "name=", "Set <Site> as Site Name"),
             ("o:", "option=", "Option=value to add"),
-            ("m:", "maxNumberOfProcessors=", "specify a max number of processors to use by the payload inside a pilot"),
+            (
+                "m:",
+                "maxNumberOfProcessors=",
+                "specify a max number of processors to use by the payload inside a pilot",
+            ),
             ("", "modules=", "for installing non-released code"),
             (
                 "",
@@ -1003,7 +1026,11 @@ class PilotParams(object):
             ("K:", "certLocation=", "Specify server certificate location"),
             ("M:", "MaxCycles=", "Maximum Number of JobAgent cycles to run"),
             ("", "PollingTime=", "JobAgent execution frequency"),
-            ("", "StopOnApplicationFailure=", "Stop Job Agent when encounter an application failure"),
+            (
+                "",
+                "StopOnApplicationFailure=",
+                "Stop Job Agent when encounter an application failure",
+            ),
             ("", "StopAfterFailedMatches=", "Stop Job Agent after N failed matches"),
             ("N:", "Name=", "CE Name"),
             ("O:", "OwnerDN=", "Pilot OwnerDN (for private pilots)"),
@@ -1013,12 +1040,20 @@ class PilotParams(object):
             ("R:", "reference=", "Use this pilot reference"),
             ("S:", "setup=", "DIRAC Setup to use"),
             ("T:", "CPUTime=", "Requested CPU Time"),
-            ("W:", "gateway=", "Configure <gateway> as DIRAC Gateway during installation"),
+            (
+                "W:",
+                "gateway=",
+                "Configure <gateway> as DIRAC Gateway during installation",
+            ),
             ("X:", "commands=", "Pilot commands to execute"),
             ("Z:", "commandOptions=", "Options parsed by command modules"),
             ("", "pilotUUID=", "pilot UUID"),
             ("", "preinstalledEnv=", "preinstalled pilot environment script location"),
-            ("", "preinstalledEnvPrefix=", "preinstalled pilot environment area prefix"),
+            (
+                "",
+                "preinstalledEnvPrefix=",
+                "preinstalled pilot environment area prefix",
+            ),
             ("", "architectureScript=", "architecture script to use"),
             ("", "CVMFS_locations=", "comma-separated list of CVMS locations"),
         )
@@ -1105,7 +1140,9 @@ class PilotParams(object):
         """Parses and interpret options on the command line: first pass (essential things)"""
 
         self.optList, __args__ = getopt.getopt(
-            sys.argv[1:], "".join([opt[0] for opt in self.cmdOpts]), [opt[1] for opt in self.cmdOpts]
+            sys.argv[1:],
+            "".join([opt[0] for opt in self.cmdOpts]),
+            [opt[1] for opt in self.cmdOpts],
         )
         self.log.debug("Options list: %s" % self.optList)
         for o, v in self.optList:
@@ -1131,7 +1168,9 @@ class PilotParams(object):
         """
 
         self.optList, __args__ = getopt.getopt(
-            sys.argv[1:], "".join([opt[0] for opt in self.cmdOpts]), [opt[1] for opt in self.cmdOpts]
+            sys.argv[1:],
+            "".join([opt[0] for opt in self.cmdOpts]),
+            [opt[1] for opt in self.cmdOpts],
         )
         for o, v in self.optList:
             if o == "-E" or o == "--commandExtensions":
@@ -1455,7 +1494,10 @@ class PilotParams(object):
         # Commands first
         # FIXME: pilotSynchronizer() should publish these as comma-separated lists. We are ready for that.
         try:
-            if isinstance(self.pilotJSON["Setups"][self.setup]["Commands"][self.gridCEType], basestring):
+            if isinstance(
+                self.pilotJSON["Setups"][self.setup]["Commands"][self.gridCEType],
+                basestring,
+            ):
                 self.commands = [
                     str(pv).strip()
                     for pv in self.pilotJSON["Setups"][self.setup]["Commands"][self.gridCEType].split(",")
@@ -1466,7 +1508,10 @@ class PilotParams(object):
                 ]
         except KeyError:
             try:
-                if isinstance(self.pilotJSON["Setups"][self.setup]["Commands"]["Defaults"], basestring):
+                if isinstance(
+                    self.pilotJSON["Setups"][self.setup]["Commands"]["Defaults"],
+                    basestring,
+                ):
                     self.commands = [
                         str(pv).strip()
                         for pv in self.pilotJSON["Setups"][self.setup]["Commands"]["Defaults"].split(",")
@@ -1477,7 +1522,10 @@ class PilotParams(object):
                     ]
             except KeyError:
                 try:
-                    if isinstance(self.pilotJSON["Setups"]["Defaults"]["Commands"][self.gridCEType], basestring):
+                    if isinstance(
+                        self.pilotJSON["Setups"]["Defaults"]["Commands"][self.gridCEType],
+                        basestring,
+                    ):
                         self.commands = [
                             str(pv).strip()
                             for pv in self.pilotJSON["Setups"]["Defaults"]["Commands"][self.gridCEType].split(",")
@@ -1488,7 +1536,10 @@ class PilotParams(object):
                         ]
                 except KeyError:
                     try:
-                        if isinstance(self.pilotJSON["Defaults"]["Commands"]["Defaults"], basestring):
+                        if isinstance(
+                            self.pilotJSON["Defaults"]["Commands"]["Defaults"],
+                            basestring,
+                        ):
                             self.commands = [
                                 str(pv).strip() for pv in self.pilotJSON["Defaults"]["Commands"]["Defaults"].split(",")
                             ]
@@ -1516,7 +1567,8 @@ class PilotParams(object):
         except KeyError:
             try:
                 if isinstance(
-                    self.pilotJSON["Setups"]["Defaults"]["CommandExtensions"], basestring
+                    self.pilotJSON["Setups"]["Defaults"]["CommandExtensions"],
+                    basestring,
                 ):  # Or in the defaults section?
                     self.commandExtensions = [
                         str(pv).strip() for pv in self.pilotJSON["Setups"]["Defaults"]["CommandExtensions"].split(",")
@@ -1556,7 +1608,8 @@ class PilotParams(object):
         except KeyError:  # and if it doesn't exist
             try:
                 if isinstance(
-                    self.pilotJSON["Setups"]["Defaults"]["ConfigurationServer"], basestring
+                    self.pilotJSON["Setups"]["Defaults"]["ConfigurationServer"],
+                    basestring,
                 ):  # Is there one in the defaults section?
                     self.configServer = ",".join(
                         [
