@@ -375,7 +375,7 @@ class InstallDIRAC(CommandBase):
 
         try:
             # In case we want to force local installation (in absence of CVMFS or for test reasons)
-            if "diracInstallOnly" in self.pp.genericOption:
+            if "diracInstallOnly" in self.pp.genericOptions:
                 self.log.info("NOT sourcing: starting traditional DIRAC installation")
                 self._localInstallDIRAC()
                 return
@@ -397,7 +397,7 @@ class InstallDIRAC(CommandBase):
 
         except OSError as e:
             self.log.error("Exception when trying to source the DIRAC environment: %s" % str(e))
-            if "cvmfsOnly" in self.pp.genericOption:
+            if "cvmfsOnly" in self.pp.genericOptions:
                 self.exitWithError(1)
             self.log.warn("Source of the DIRAC environment NOT DONE: starting traditional DIRAC installation")
             self._localInstallDIRAC()
@@ -759,9 +759,8 @@ class ConfigureSite(CommandBase):
         if self.pp.ceType:
             self.cfg.append("-o /LocalSite/LocalCE=%s" % self.pp.ceType)
 
-        for o, v in self.pp.optList:
-            if o == "-o" or o == "--option":
-                self.cfg.append('-o "%s"' % v)
+        for genericOption in self.pp.genericOptions:
+            self.cfg.append('-o "%s"' % genericOption)
 
         if self.pp.pilotReference:
             self.cfg.append("-o /LocalSite/PilotReference=%s" % self.pp.pilotReference)
